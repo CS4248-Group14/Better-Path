@@ -35,7 +35,7 @@ all_feature_lengths = {'v_enc_onehot': 100,
 class Dataset:
     def __init__(self, feature_names, train_test_split_fraction, gpu, features_src_path='features', src_data_path='../../data/science'):
         self.feature_names = feature_names
-        self.heuristic_names = ['st', 'pairwise', 'TODO', 'length']
+        self.heuristic_names = ['st', 'pairwise', 'rf', 'length']
         self.cached_features = dict()
         self.gpu = gpu
         for f in feature_names:
@@ -323,6 +323,21 @@ class PairwiseHeuristicsExtractor(HeuristicPreprocessor):
         return total_score / (size+1)
 
 
+class RFHeuristicsExtractor(HeuristicPreprocessor):
+    # simplified: product of degrees (for easier standardization, take log)
+    def __init__(self, src_data_path, tgt_dir_path, v_deg_path):
+        super(RFHeuristicsExtractor, self).__init__('rf', src_data_path, tgt_dir_path)
+        with open(v_deg_path, 'rb') as file:
+            self.v_deg = pickle.load(file, encoding='latin1')
+
+    def _eval_path(self, id_):
+        score = 0
+        deg = self.v_deg[id_]
+        for d in deg:
+            score += np.log(d[0])
+        return score
+
+
 class LengthHeuristicsExtractor(HeuristicPreprocessor):
     def __init__(self, src_data_path, tgt_dir_path):
         super(LengthHeuristicsExtractor, self).__init__('length', src_data_path, tgt_dir_path)
@@ -340,5 +355,7 @@ if __name__ == '__main__':
     sthe.calc_heuristics()
     phe = PairwiseHeuristicsExtractor('../data/science', '../prepare_data/heuristics', '../prepare_data/features/v_enc_embedding.pkl')
     phe.calc_heuristics()
+    rfhe = RFHeuristicsExtractor('../data/science', '../prepare_data/heuristics', '../prepare_data/features/v_deg.pkl')
+    rfhe.calc_heuristics()
     lhe = LengthHeuristicsExtractor('../data/science', '../prepare_data/heuristics')
     lhe.calc_heuristics()

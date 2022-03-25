@@ -11,6 +11,7 @@ Some changes are done to all `Python` files for it to be compatible in `Python3`
 Changes:
 1. [DONE by Jiayu] Add two parameters for feature and data paths respectively in class constructor (for implementation flexibility).
 1. [TODO @Wang Qian] New features for edges.
+1. [DONE by Jiayu] Prepare cached heuristics.
 1. [TODO @Jiayu] Path heuristics util.
 
 `model.py` is adapted from `code/science/model.py`.
