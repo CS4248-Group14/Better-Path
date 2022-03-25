@@ -15,10 +15,14 @@ class FeatureTransformer(nn.Module):
         self.d_in = d_in
         self.d_out = d_out
         self.linear = nn.Linear(d_in, d_out)
+        # self.linear1 = nn.Linear(d_in, 100)
+        # self.relu_m = nn.ReLU(inplace=False)
+        # self.linear2 = nn.Linear(100, d_out)
         self.relu = nn.ReLU(inplace=False)
 
     def forward(self, input):
         return self.relu(self.linear(input))
+        # return self.relu(self.linear2(self.relu_m(self.linear1(input))))
 
 class ChainEncoder(nn.Module):
     '''

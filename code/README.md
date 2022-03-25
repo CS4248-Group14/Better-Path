@@ -17,7 +17,9 @@ Changes:
 Changes:
 1. [DONE by Jiayu] Modify to avoid `RuntimeError` caused by inplace update (under CPU environment).
 1. [TODO @Tian Fang, @Brendan] Two modified encoding methods (with dimension unification).
-1. [TODO @Jiayu] More layers for predictor.
+1. [DONE by Jiayu] More layers for predictor. 
+   (Also commented a multi-layer model for `FeatureTransformer`, but not directly used because by experiments it 
+   doesn't show great advantage. See [Experiment Results](../analysis/experiment_data.xlsx).)
 
 `learn.py` is adapted from `code/science/learn.py`.
 Changes:
@@ -25,3 +27,4 @@ Changes:
 1. [DONE by Jiayu] Update paths according to configuration in our project.
 1. [DONE by Jiayu] Add more hyperparameters to `train` function.
 1. [TODO @Jiayu] Concat path heuristics in training.
+

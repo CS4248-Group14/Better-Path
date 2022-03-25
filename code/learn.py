@@ -44,7 +44,8 @@ def train(dataset, features, fea_len, split_frac, out_file, gpu, max_iter, batch
         softmax_output = predictor(output_test_A, output_test_B).data.cpu().numpy()
         test_y_pred = softmax_output.argmax(axis=1)
         cur_acc = (test_y_pred==test_y).sum() / len(test_y)
-        print('test acc:', cur_acc)
+        if train_iter%10 == 0:
+            print(train_iter, 'test acc:', cur_acc)
         out_file.write('%f\n'%cur_acc)
         if train_iter%50==0:
             torch.save(enc.state_dict(),
