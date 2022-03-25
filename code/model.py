@@ -106,12 +106,14 @@ class Predictor(nn.Module):
     '''
     def __init__(self, feature_len):
         super(Predictor, self).__init__()
-        self.linear = nn.Linear(feature_len, 1)
+        self.linear1 = nn.Linear(feature_len, 100)
+        self.relu = nn.ReLU(inplace=False)
+        self.linear2 = nn.Linear(100, 1)
         self.logsoftmax = nn.LogSoftmax(dim=1)
 
     def forward(self, vec1, vec2):
-        a = self.linear(vec1)
-        b = self.linear(vec2)
+        a = self.linear2(self.relu(self.linear1(vec1)))
+        b = self.linear2(self.relu(self.linear1(vec2)))
         combined = torch.cat((a, b), dim=1)
         return self.logsoftmax(combined)
 
