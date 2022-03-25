@@ -8,7 +8,7 @@ from model import ChainEncoder, Predictor
 from dataset import Dataset
 from multiprocessing import Pool
 
-def train(dataset, features, fea_len, split_frac, out_file, gpu):
+def train(dataset, features, fea_len, split_frac, out_file, gpu, max_iter, batch_size, ckpt_path):
     if isinstance(out_file, str):
         out_file = open(out_file, 'w')
     d = Dataset(features, split_frac, gpu, '../prepare_data/features', '../data/%s'%dataset)
@@ -26,8 +26,8 @@ def train(dataset, features, fea_len, split_frac, out_file, gpu):
     print('training')
     test_chain_A, test_chain_B, test_y = d.get_test_pairs()
     test_y = test_y.data.cpu().numpy()
-    for train_iter in range(4000):
-        chains_A, chains_B, y = d.get_train_pairs(1000)
+    for train_iter in range(max_iter):
+        chains_A, chains_B, y = d.get_train_pairs(batch_size)
         enc.zero_grad()
         predictor.zero_grad()
         output_A = enc(chains_A)
@@ -48,9 +48,9 @@ def train(dataset, features, fea_len, split_frac, out_file, gpu):
         out_file.write('%f\n'%cur_acc)
         if train_iter%50==0:
             torch.save(enc.state_dict(),
-                       'ckpt/%i_encoder.model'%train_iter)
+                       '%s/%i_encoder.model'%(ckpt_path, train_iter))
             torch.save(predictor.state_dict(),
-                       'ckpt/%i_predictor.model'%train_iter)
+                       '%s/%i_predictor.model'%(ckpt_path, train_iter))
     out_file.close()
 
 def main():
@@ -58,7 +58,7 @@ def main():
                 'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel', 'e_sense']
     feature_len = 20
     split_frac = 0.8
-    train('science', features, feature_len, split_frac, 'train.log', True)
+    train('science', features, feature_len, split_frac, 'science_train.log', True, 4000, 1000, 'science_ckpt')
 
 
 if __name__ == '__main__':

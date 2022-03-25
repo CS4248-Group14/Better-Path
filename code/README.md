@@ -18,3 +18,6 @@ Changes:
 1. `Python` version compatibility issue, change `print xx` to `print(xx)`, `xrange` to `range`.
 1. Wrap code in main function.
 1. Update paths according to configuration in our project.
+1. Add more hyperparameters to `train` function.
+1. Combined with `code/open-domain/learn.py`.
+1. [TODO @Jiayu] Concat path heuristics in training.
