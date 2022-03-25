@@ -24,5 +24,4 @@ Changes:
 1. [DONE by Jiayu] Wrap code in main function.
 1. [DONE by Jiayu] Update paths according to configuration in our project.
 1. [DONE by Jiayu] Add more hyperparameters to `train` function.
-1. Combined with `code/open-domain/learn.py`.
 1. [TODO @Jiayu] Concat path heuristics in training.
