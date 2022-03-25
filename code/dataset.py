@@ -33,9 +33,9 @@ all_feature_lengths = {'v_enc_onehot': 100,
 # TODO: @Jiayu, add heuristic extraction util here
 
 class Dataset:
-    def __init__(self, feature_names, train_test_split_fraction, gpu, features_src_path='features', src_data_path='../../data/science'):
+    def __init__(self, feature_names, heuristic_names, train_test_split_fraction, gpu, features_src_path='features',
+                 heuristics_src_path='heuristics', src_data_path='../../data/science'):
         self.feature_names = feature_names
-        self.heuristic_names = ['st', 'pairwise', 'rf', 'length']
         self.cached_features = dict()
         self.gpu = gpu
         for f in feature_names:
@@ -65,6 +65,11 @@ class Dataset:
                 continue
             self.all_pairs.append((good, bad))
         random.shuffle(self.all_pairs)
+        self.heuristic_names = heuristic_names
+        self.cached_heuristics = dict()
+        for h in self.heuristic_names:
+            print('loading h', h)
+            self.cached_heuristics[h] = pickle.load(open('%s/%s.pkl'%(heuristics_src_path, h), 'rb'))
 
         split = int(train_test_split_fraction*len(self.all_pairs))
         self.train_pairs = self.all_pairs[:split]
@@ -95,11 +100,13 @@ class Dataset:
                 e_features.append(self.cached_features[f][id])
         v_features = zip(*v_features)
         e_features = zip(*e_features)
-        return v_features, e_features
+        heuristics = [self.cached_heuristics[h][id] for h in self.heuristic_names]
+        return v_features, e_features, heuristics
 
     def prepare_feature_placeholder(self, N):
         v_features = [[],[],[],[]]
         e_features = [[],[],[]]
+        heuristics = []
         for feature in v_features:
             for f in self.feature_names:
                 if f.startswith('v'):
@@ -112,7 +119,9 @@ class Dataset:
                     feature.append(
                         np.zeros((N, all_feature_lengths[f]), dtype='float32')
                     )
-        return v_features, e_features
+        for h in self.heuristic_names:
+            heuristics.append(np.zeros((N, 1), dtype='float32'))
+        return v_features, e_features, heuristics
 
     def get_train_pairs(self, N, randomize_dir=True):
         '''
@@ -123,8 +132,8 @@ class Dataset:
         currently only keeping chains of length 4
         if for i-th problem, the good chain is in X_A, then y[i]==1, else y[i]==0
         '''
-        v_features_A, e_features_A = self.prepare_feature_placeholder(N)
-        v_features_B, e_features_B = self.prepare_feature_placeholder(N)
+        v_features_A, e_features_A, heuristics_A = self.prepare_feature_placeholder(N)
+        v_features_B, e_features_B, heuristics_B = self.prepare_feature_placeholder(N)
         y = np.zeros(N, dtype='int64')
 
         for instance_idx in range(N):
@@ -132,8 +141,8 @@ class Dataset:
             if randomize_dir:
                 good = good[:-1]+random.choice(['f','r'])
                 bad = bad[:-1]+random.choice(['f','r'])
-            v_good, e_good = self.get_features(good)
-            v_bad, e_bad = self.get_features(bad)
+            v_good, e_good, h_good = self.get_features(good)
+            v_bad, e_bad, h_bad = self.get_features(bad)
             v_good, e_good, v_bad, e_bad = list(v_good), list(e_good), list(v_bad), list(e_bad)
 
             label = random.random()>0.5
@@ -156,16 +165,29 @@ class Dataset:
                         e_features_B[e_idx][e_fea_idx][instance_idx] = e_good[e_idx][e_fea_idx]
                         e_features_A[e_idx][e_fea_idx][instance_idx] = e_bad[e_idx][e_fea_idx]
 
+            for h_idx in range(len(h_good)):
+                if label:
+                    heuristics_A[h_idx][instance_idx] = h_good[h_idx]
+                    heuristics_B[h_idx][instance_idx] = h_bad[h_idx]
+                else:
+                    heuristics_B[h_idx][instance_idx] = h_good[h_idx]
+                    heuristics_A[h_idx][instance_idx] = h_bad[h_idx]
+
         for features in [v_features_A, e_features_A, v_features_B, e_features_B]:
             for feature in features:
                 for i in range(len(feature)):
                     feature[i] = Variable(torch.from_numpy(feature[i]))
                     if self.gpu:
                         feature[i] = feature[i].cuda()
+        for heuristics in [heuristics_A, heuristics_B]:
+            for i in range(len(heuristics)):
+                heuristics[i] = Variable(torch.from_numpy(heuristics[i]))
+                if self.gpu:
+                    heuristics[i] = heuristics[i].cuda()
         y = Variable(torch.from_numpy(y))
         if self.gpu:
             y = y.cuda()
-        return ((v_features_A, e_features_A), (v_features_B, e_features_B), y)
+        return ((v_features_A, e_features_A), heuristics_A, (v_features_B, e_features_B), heuristics_B, y)
 
     def get_test_pairs(self, randomize_dir=True, return_id=False):
         '''
@@ -177,8 +199,8 @@ class Dataset:
         if for i-th problem, the good chain is in X_A, then y[i]==1, else y[i]==0
         '''
         N = len(self.test_pairs)
-        v_features_A, e_features_A = self.prepare_feature_placeholder(N)
-        v_features_B, e_features_B = self.prepare_feature_placeholder(N)
+        v_features_A, e_features_A, heuristics_A = self.prepare_feature_placeholder(N)
+        v_features_B, e_features_B, heuristics_B = self.prepare_feature_placeholder(N)
         y = np.zeros(N, dtype='int64')
         if return_id:
             ids = [[], []]
@@ -188,8 +210,8 @@ class Dataset:
             if randomize_dir:
                 good = good[:-1]+random.choice(['f','r'])
                 bad = bad[:-1]+random.choice(['f','r'])
-            v_good, e_good = self.get_features(good)
-            v_bad, e_bad = self.get_features(bad)
+            v_good, e_good, h_good = self.get_features(good)
+            v_bad, e_bad, h_bad = self.get_features(bad)
             v_good, e_good, v_bad, e_bad = list(v_good), list(e_good), list(v_bad), list(e_bad)
 
             label = random.random()>0.5
@@ -219,19 +241,32 @@ class Dataset:
                         e_features_B[e_idx][e_fea_idx][instance_idx] = e_good[e_idx][e_fea_idx]
                         e_features_A[e_idx][e_fea_idx][instance_idx] = e_bad[e_idx][e_fea_idx]
 
+            for h_idx in range(len(h_good)):
+                if label:
+                    heuristics_A[h_idx][instance_idx] = h_good[h_idx]
+                    heuristics_B[h_idx][instance_idx] = h_bad[h_idx]
+                else:
+                    heuristics_B[h_idx][instance_idx] = h_good[h_idx]
+                    heuristics_A[h_idx][instance_idx] = h_bad[h_idx]
+
         for features in [v_features_A, e_features_A, v_features_B, e_features_B]:
             for feature in features:
                 for i in range(len(feature)):
                     feature[i] = Variable(torch.from_numpy(feature[i]))
                     if self.gpu:
                         feature[i] = feature[i].cuda()
+        for heuristics in [heuristics_A, heuristics_B]:
+            for i in range(len(heuristics)):
+                heuristics[i] = Variable(torch.from_numpy(heuristics[i]))
+                if self.gpu:
+                    heuristics[i] = heuristics[i].cuda()
         y = Variable(torch.from_numpy(y))
         if self.gpu:
             y = y.cuda()
         if not return_id:
-            return (v_features_A, e_features_A), (v_features_B, e_features_B), y
+            return (v_features_A, e_features_A), heuristics_A, (v_features_B, e_features_B), heuristics_B, y
         else:
-            return (v_features_A, e_features_A), (v_features_B, e_features_B), y, ids
+            return (v_features_A, e_features_A), heuristics_A, (v_features_B, e_features_B), heuristics_B, y, ids
 
     def get_pairs_for_ids(self, ids):
         '''
@@ -243,12 +278,12 @@ class Dataset:
         currently only keeping chains of length 4
         '''
         N = len(ids)
-        v_features_A, e_features_A = self.prepare_feature_placeholder(N)
-        v_features_B, e_features_B = self.prepare_feature_placeholder(N)
+        v_features_A, e_features_A, heuristics_A = self.prepare_feature_placeholder(N)
+        v_features_B, e_features_B, heuristics_B = self.prepare_feature_placeholder(N)
 
         for instance_idx, (first, second) in enumerate(ids):
-            v_first, e_first = self.get_features(first)
-            v_second, e_second = self.get_features(second)
+            v_first, e_first, h_first = self.get_features(first)
+            v_second, e_second, h_second = self.get_features(second)
 
             for v_idx in range(4):
                 for v_fea_idx in range(len(v_first[v_idx])):
@@ -260,13 +295,22 @@ class Dataset:
                     e_features_A[e_idx][e_fea_idx][instance_idx] = e_first[e_idx][e_fea_idx]
                     e_features_B[e_idx][e_fea_idx][instance_idx] = e_second[e_idx][e_fea_idx]
 
+            for h_idx in range(len(h_first)):
+                heuristics_A[h_idx][instance_idx] = h_first[h_idx]
+                heuristics_B[h_idx][instance_idx] = h_second[h_idx]
+
         for features in [v_features_A, e_features_A, v_features_B, e_features_B]:
             for feature in features:
                 for i in range(len(feature)):
                     feature[i] = Variable(torch.from_numpy(feature[i]))
                     if self.gpu:
                         feature[i] = feature[i].cuda()
-        return ((v_features_A, e_features_A), (v_features_B, e_features_B))
+        for heuristics in [heuristics_A, heuristics_B]:
+            for i in range(len(heuristics)):
+                heuristics[i] = Variable(torch.from_numpy(heuristics[i]))
+                if self.gpu:
+                    heuristics[i] = heuristics[i].cuda()
+        return ((v_features_A, e_features_A), heuristics_A, (v_features_B, e_features_B), heuristics_B)
 
 
 class HeuristicPreprocessor:
