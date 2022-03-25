@@ -3,7 +3,7 @@ Code here is largely adapted from Zhou et al.'s original work from
 
 `dataset.py` is adapted from `code/science/dataset.py`.
 Changes:
-1. `Python` version compatibility issue, change `print xx` to `print(xx)`, `xrange` to `range`.
+1. `Python` version compatibility issue, change `print xx` to `print(xx)`, `xrange` to `range`, add `encoding='latin1'` for pickle loading.
 1. Add two parameters for feature and data paths respectively in class constructor (for implementation flexibility).
 1. [TODO @Wang Qian] New features for edges.
 1. [TODO @Jiayu] Path heuristics util.

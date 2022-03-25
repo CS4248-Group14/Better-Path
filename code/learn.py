@@ -58,7 +58,7 @@ def main():
                 'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel', 'e_sense']
     feature_len = 20
     split_frac = 0.8
-    train('science', features, feature_len, split_frac, 'science_train.log', True, 4000, 1000, 'science_ckpt')
+    train('science', features, feature_len, split_frac, 'science_train.log', False, 4000, 1000, 'science_ckpt')
 
 
 if __name__ == '__main__':

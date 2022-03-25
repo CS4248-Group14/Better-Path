@@ -40,9 +40,9 @@ class Dataset:
         for f in feature_names:
             print('loading '+f)
             self.cached_features[f] = pickle.load(
-                open('%s/%s.pkl'%(features_src_path, f), 'rb'))
+                open('%s/%s.pkl'%(features_src_path, f), 'rb'), encoding='latin1')
         sampled_problems = pickle.load(open(
-            '%s/paths.pkl'%src_data_path, 'rb'))
+            '%s/paths.pkl'%src_data_path, 'rb'), encoding='latin1')
         self.texts = dict()
         print('loading problem plain texts')
         for id_num in sampled_problems:
@@ -133,6 +133,7 @@ class Dataset:
                 bad = bad[:-1]+random.choice(['f','r'])
             v_good, e_good = self.get_features(good)
             v_bad, e_bad = self.get_features(bad)
+            v_good, e_good, v_bad, e_bad = list(v_good), list(e_good), list(v_bad), list(e_bad)
 
             label = random.random()>0.5
             y[instance_idx] = label
@@ -188,6 +189,7 @@ class Dataset:
                 bad = bad[:-1]+random.choice(['f','r'])
             v_good, e_good = self.get_features(good)
             v_bad, e_bad = self.get_features(bad)
+            v_good, e_good, v_bad, e_bad = list(v_good), list(e_good), list(v_bad), list(e_bad)
 
             label = random.random()>0.5
             y[instance_idx] = label
