@@ -53,9 +53,11 @@ def train(dataset, features, fea_len, split_frac, out_file, gpu, max_iter, batch
                        '%s/%i_predictor.model'%(ckpt_path, train_iter))
     out_file.close()
 
+
 def main():
     features = ['v_enc_dim300', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
                 'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel', 'e_sense']
+    # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     feature_len = 20
     split_frac = 0.8
     train('science', features, feature_len, split_frac, 'science_train.log', False, 4000, 1000, 'science_ckpt')

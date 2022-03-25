@@ -15,7 +15,7 @@ class FeatureTransformer(nn.Module):
         self.d_in = d_in
         self.d_out = d_out
         self.linear = nn.Linear(d_in, d_out)
-        self.relu = nn.ReLU()
+        self.relu = nn.ReLU(inplace=False)
 
     def forward(self, input):
         return self.relu(self.linear(input))
@@ -53,6 +53,7 @@ class ChainEncoder(nn.Module):
         each tuple is an N x d_in Variable, in which N is the batch size, and d_in is the feature length
         e_features is structured similarly
         '''
+
         v_features, e_features = input
         v_encs = []
         for i in range(len(v_features)):
@@ -60,9 +61,9 @@ class ChainEncoder(nn.Module):
             for j in range(len(v_features[i])):
                 fea_enc = self.v_fea_encs[j]
                 if v_enc is None:
-                    v_enc = fea_enc(v_features[i][j])
+                    v_enc = fea_enc(v_features[i][j]).clone()
                 else:
-                    v_enc += fea_enc(v_features[i][j])
+                    v_enc += fea_enc(v_features[i][j]).clone()
             v_enc = v_enc / len(v_features[i])
             v_encs.append(v_enc)
         e_encs = []
@@ -71,9 +72,9 @@ class ChainEncoder(nn.Module):
             for j in range(len(e_features[i])):
                 fea_enc = self.e_fea_encs[j]
                 if e_enc is None:
-                    e_enc = fea_enc(e_features[i][j])
+                    e_enc = fea_enc(e_features[i][j]).clone()
                 else:
-                    e_enc += fea_enc(e_features[i][j])
+                    e_enc += fea_enc(e_features[i][j]).clone()
             e_enc = e_enc / len(e_features[i])
             e_encs.append(e_enc)
 
@@ -109,8 +110,9 @@ class Predictor(nn.Module):
         self.logsoftmax = nn.LogSoftmax(dim=1)
 
     def forward(self, vec1, vec2):
-        # combined = torch.cat((vec1, vec2), dim=1)
         a = self.linear(vec1)
         b = self.linear(vec2)
         combined = torch.cat((a, b), dim=1)
         return self.logsoftmax(combined)
+
+
