@@ -28,7 +28,9 @@ all_feature_lengths = {'v_enc_onehot': 100,
                        'e_srank_rel': 1,
                        'e_trank_abs': 1,
                        'e_trank_rel': 1,
-                       'e_sense': 1}  # TODO: @ Wang Qian, add more here
+                       'e_sense': 1}
+# TODO: @Wang Qian, add e_xx here
+# TODO: @Jiayu, add heuristic extraction util here
 
 class Dataset:
     def __init__(self, feature_names, train_test_split_fraction, gpu, features_src_path='features', src_data_path='../../data/science'):
