@@ -12,6 +12,7 @@ def train(dataset, features, fea_len, split_frac, out_file, gpu, max_iter, batch
     if isinstance(out_file, str):
         out_file = open(out_file, 'w')
     d = Dataset(features, split_frac, gpu, '../prepare_data/features', '../data/%s'%dataset)
+    raise ValueError('temp')
     print('defining architecture')
     enc = ChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
     predictor = Predictor(fea_len)
@@ -56,9 +57,9 @@ def train(dataset, features, fea_len, split_frac, out_file, gpu, max_iter, batch
 
 
 def main():
-    features = ['v_enc_dim300', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
-                'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel', 'e_sense']
-    # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
+    # features = ['v_enc_dim300', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
+    #             'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel', 'e_sense']
+    features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     train('science', features, 20, 0.8, 'science_train.log', False, 4000, 1000, 'science_ckpt')
     # train('open_domain', features, 10, 0.95, 'open_domain_train.log', False, 12000, 100, 'open_domain_ckpt')
 

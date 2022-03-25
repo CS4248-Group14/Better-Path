@@ -35,6 +35,7 @@ all_feature_lengths = {'v_enc_onehot': 100,
 class Dataset:
     def __init__(self, feature_names, train_test_split_fraction, gpu, features_src_path='features', src_data_path='../../data/science'):
         self.feature_names = feature_names
+        self.heuristic_names = ['st', 'pairwise', 'TODO', 'length']
         self.cached_features = dict()
         self.gpu = gpu
         for f in feature_names:
@@ -266,3 +267,28 @@ class Dataset:
                     if self.gpu:
                         feature[i] = feature[i].cuda()
         return ((v_features_A, e_features_A), (v_features_B, e_features_B))
+
+
+class HeuristicPreprocessor:
+    def __init__(self, name, src_data_path, tgt_dir_path):
+        self.name = name
+        sampled_problems = pickle.load(open(
+            '%s/paths.pkl'%src_data_path, 'rb'), encoding='latin1')
+        self.texts = dict()
+        print('loading problem plain texts')
+        for id_num in sampled_problems:
+            f_short = sampled_problems[id_num]['forward']['short']
+            r_short = sampled_problems[id_num]['reverse']['short']
+            self.texts[id_num+'f'] = f_short
+            self.texts[id_num+'r'] = r_short
+        self.tgt_dir_path = tgt_dir_path
+
+    def _eval_path(self, path):
+        raise NotImplementedError()
+
+    def calc_heuristics(self):
+        scores = dict()
+        for id_ in self.texts:
+            scores[id_] = self._eval_path(self.texts[id_])
+        with open('%s/%s.pkl'%(self.tgt_dir_path, self.name), 'wb') as file:
+            pickle.dump(scores, file)
