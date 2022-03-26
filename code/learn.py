@@ -4,7 +4,7 @@ import numpy as np
 import torch, sys, os
 from torch import nn, optim
 from torch.autograd import Variable
-from model import ChainEncoder, Predictor
+from model import ChainEncoder, Predictor, AlternateChainEncoder, ConcatChainEncoder_Brendan
 from dataset import Dataset
 from multiprocessing import Pool
 
@@ -13,7 +13,9 @@ def train(dataset, features, fea_len, split_frac, out_file, gpu, max_iter, batch
         out_file = open(out_file, 'w')
     d = Dataset(features, split_frac, gpu, '../prepare_data/features', '../data/%s'%dataset)
     print('defining architecture')
-    enc = ChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
+    # enc = ChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
+    enc = AlternateChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
+    # enc = ConcatChainEncoder_Brendan(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
     predictor = Predictor(fea_len)
     loss = nn.NLLLoss()
     if gpu:
@@ -58,8 +60,8 @@ def main():
     features = ['v_enc_dim300', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
                 'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel', 'e_sense']
     # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
-    # train('science', features, 20, 0.8, 'science_train.log', False, 4000, 1000, 'science_ckpt')
-    train('open_domain', features, 10, 0.95, 'open_domain_train.log', False, 12000, 100, 'open_domain_ckpt')
+    train('science', features, 20, 0.8, 'science_train.log', False, 4000, 1000, 'science_ckpt')
+    # train('open_domain', features, 10, 0.95, 'open_domain_train.log', False, 12000, 100, 'open_domain_ckpt')
 
 
 if __name__ == '__main__':

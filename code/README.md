@@ -16,7 +16,7 @@ Changes:
 `model.py` is adapted from `code/science/model.py`.
 Changes:
 1. [DONE by Jiayu] Modify to avoid `RuntimeError` caused by inplace update (under CPU environment).
-1. [TODO @Tian Fang, @Brendan] Two modified encoding methods (with dimension unification).
+1. [DONE by Brendan] Two modified encoding methods (with dimension unification).
 1. [TODO @Jiayu] More layers for predictor.
 
 `learn.py` is adapted from `code/science/learn.py`.
