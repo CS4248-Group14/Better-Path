@@ -19,6 +19,7 @@ all_feature_lengths = {'v_enc_onehot': 100,
                        'v_deg': 1,
                        'v_sense': 1,
                        'e_vertexsim': 1,
+                       'e_vertexnorm': 1,
                        'e_dir': 3,
                        'e_rel': 46,
                        'e_weight': 1,
@@ -29,7 +30,49 @@ all_feature_lengths = {'v_enc_onehot': 100,
                        'e_trank_abs': 1,
                        'e_trank_rel': 1,
                        'e_sense': 1}
+
 # TODO: @Wang Qian, add e_xx here
+
+class FeaturesPreprocessor:
+    def __init__(self, name, src_data_path, tgt_dir_path):
+        self.name = name
+        sampled_problems = pickle.load(open(
+            '%s/paths.pkl'%src_data_path, 'rb'), encoding='latin1')
+        self.texts = dict()
+        print('loading problem plain texts')
+        for id_num in sampled_problems:
+            f_short = sampled_problems[id_num]['forward']['short']
+            r_short = sampled_problems[id_num]['reverse']['short']
+            self.texts[id_num+'f'] = f_short
+            self.texts[id_num+'r'] = r_short
+        self.tgt_dir_path = tgt_dir_path
+
+    def _eval_path(self, id_):
+        raise NotImplementedError()
+
+    def calc_features(self):
+        scores = dict()
+        for id_ in self.texts:
+            scores[id_] = self._eval_path(id_)
+        with open('%s/%s.pkl'%(self.tgt_dir_path, self.name), 'wb') as file:
+            pickle.dump(scores, file)
+
+
+class EdgeDistanceExtractor(FeaturesPreprocessor):
+
+    def __init__(self, src_data_path, tgt_dir_path, v_enc_path):
+        super(FeaturesPreprocessor, self).__init__('e_vertexdist', src_data_path, tgt_dir_path)
+        with open(v_enc_path, 'rb') as file:
+            self.v_emb = pickle.load(file, encoding='latin1')
+
+    def _eval_path(self, id_):
+        emb_data = self.v_emb[id_]
+        # each score is an embedding of edge's two ends' L1 distance
+        scores = [[], [], []]
+        for i in range(len(emb_data)-1):
+            scores[i] = [torch.dist(torch.tensor(emb_data[i]), torch.tensor(emb_data[i+1]), 2)]
+        return scores
+
 # TODO: @Jiayu, add heuristic extraction util here
 
 class Dataset:
@@ -266,3 +309,8 @@ class Dataset:
                     if self.gpu:
                         feature[i] = feature[i].cuda()
         return ((v_features_A, e_features_A), (v_features_B, e_features_B))
+
+
+if __name__ == '__main__':
+    L2_dist = EdgeDistanceExtractor('../data/science', '../prepare_data/new_features', '../prepare_data/features/v_enc_embedding.pkl')
+    L2_dist.calc_features()
