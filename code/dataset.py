@@ -61,7 +61,8 @@ class FeaturesPreprocessor:
 class EdgeDistanceExtractor(FeaturesPreprocessor):
 
     def __init__(self, src_data_path, tgt_dir_path, v_enc_path):
-        super(FeaturesPreprocessor, self).__init__('e_vertexdist', src_data_path, tgt_dir_path)
+        super().__init__('e_vertexdist', src_data_path, tgt_dir_path)
+        # super(FeaturesPreprocessor, self).__init__('e_vertexdist', src_data_path, tgt_dir_path)
         with open(v_enc_path, 'rb') as file:
             self.v_emb = pickle.load(file, encoding='latin1')
 
