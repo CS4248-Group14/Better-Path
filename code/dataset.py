@@ -61,17 +61,20 @@ class FeaturesPreprocessor:
 class EdgeDistanceExtractor(FeaturesPreprocessor):
 
     def __init__(self, src_data_path, tgt_dir_path, v_enc_path):
-        super().__init__('e_vertexdist', src_data_path, tgt_dir_path)
-        # super(FeaturesPreprocessor, self).__init__('e_vertexdist', src_data_path, tgt_dir_path)
+        # super().__init__('e_vertexdist', src_data_path, tgt_dir_path)
+        super(EdgeDistanceExtractor, self).__init__('e_vertexdist', src_data_path, tgt_dir_path)
         with open(v_enc_path, 'rb') as file:
             self.v_emb = pickle.load(file, encoding='latin1')
 
     def _eval_path(self, id_):
         emb_data = self.v_emb[id_]
         # each score is an embedding of edge's two ends' L1 distance
+        size = len(emb_data)
         scores = [[], [], []]
-        for i in range(len(emb_data)-1):
-            scores[i] = [torch.dist(torch.tensor(emb_data[i]), torch.tensor(emb_data[i+1]), 2)]
+
+        for i in range(size-1):
+            scores[i] = [torch.dist(torch.tensor(emb_data[i]), torch.tensor(emb_data[i+1]), 2).item()]
+        print(scores)
         return scores
 
 # TODO: @Jiayu, add heuristic extraction util here
@@ -313,5 +316,5 @@ class Dataset:
 
 
 if __name__ == '__main__':
-    L2_dist = EdgeDistanceExtractor('../data/science', '../prepare_data/new_features', '../prepare_data/features/v_enc_embedding.pkl')
+    L2_dist = EdgeDistanceExtractor('../data/science', '../prepare_data/features', '../prepare_data/features/v_enc_embedding.pkl')
     L2_dist.calc_features()
