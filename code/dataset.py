@@ -33,7 +33,8 @@ all_feature_lengths = {'v_enc_onehot': 100,
 # TODO: @Jiayu, add heuristic extraction util here
 
 class Dataset:
-    def __init__(self, feature_names, train_test_split_fraction, gpu, features_src_path='features', src_data_path='../../data/science'):
+    def __init__(self, feature_names, heuristic_names, train_test_split_fraction, gpu, features_src_path='features',
+                 heuristics_src_path='heuristics', src_data_path='../../data/science'):
         self.feature_names = feature_names
         self.cached_features = dict()
         self.gpu = gpu
@@ -64,6 +65,11 @@ class Dataset:
                 continue
             self.all_pairs.append((good, bad))
         random.shuffle(self.all_pairs)
+        self.heuristic_names = heuristic_names
+        self.cached_heuristics = dict()
+        for h in self.heuristic_names:
+            print('loading h', h)
+            self.cached_heuristics[h] = pickle.load(open('%s/%s.pkl'%(heuristics_src_path, h), 'rb'))
 
         split = int(train_test_split_fraction*len(self.all_pairs))
         self.train_pairs = self.all_pairs[:split]
@@ -94,11 +100,13 @@ class Dataset:
                 e_features.append(self.cached_features[f][id])
         v_features = zip(*v_features)
         e_features = zip(*e_features)
-        return v_features, e_features
+        heuristics = [self.cached_heuristics[h][id] for h in self.heuristic_names]
+        return v_features, e_features, heuristics
 
     def prepare_feature_placeholder(self, N):
         v_features = [[],[],[],[]]
         e_features = [[],[],[]]
+        heuristics = []
         for feature in v_features:
             for f in self.feature_names:
                 if f.startswith('v'):
@@ -111,7 +119,9 @@ class Dataset:
                     feature.append(
                         np.zeros((N, all_feature_lengths[f]), dtype='float32')
                     )
-        return v_features, e_features
+        for h in self.heuristic_names:
+            heuristics.append(np.zeros((N, 1), dtype='float32'))
+        return v_features, e_features, heuristics
 
     def get_train_pairs(self, N, randomize_dir=True):
         '''
@@ -122,8 +132,8 @@ class Dataset:
         currently only keeping chains of length 4
         if for i-th problem, the good chain is in X_A, then y[i]==1, else y[i]==0
         '''
-        v_features_A, e_features_A = self.prepare_feature_placeholder(N)
-        v_features_B, e_features_B = self.prepare_feature_placeholder(N)
+        v_features_A, e_features_A, heuristics_A = self.prepare_feature_placeholder(N)
+        v_features_B, e_features_B, heuristics_B = self.prepare_feature_placeholder(N)
         y = np.zeros(N, dtype='int64')
 
         for instance_idx in range(N):
@@ -131,8 +141,8 @@ class Dataset:
             if randomize_dir:
                 good = good[:-1]+random.choice(['f','r'])
                 bad = bad[:-1]+random.choice(['f','r'])
-            v_good, e_good = self.get_features(good)
-            v_bad, e_bad = self.get_features(bad)
+            v_good, e_good, h_good = self.get_features(good)
+            v_bad, e_bad, h_bad = self.get_features(bad)
             v_good, e_good, v_bad, e_bad = list(v_good), list(e_good), list(v_bad), list(e_bad)
 
             label = random.random()>0.5
@@ -155,16 +165,29 @@ class Dataset:
                         e_features_B[e_idx][e_fea_idx][instance_idx] = e_good[e_idx][e_fea_idx]
                         e_features_A[e_idx][e_fea_idx][instance_idx] = e_bad[e_idx][e_fea_idx]
 
+            for h_idx in range(len(h_good)):
+                if label:
+                    heuristics_A[h_idx][instance_idx] = h_good[h_idx]
+                    heuristics_B[h_idx][instance_idx] = h_bad[h_idx]
+                else:
+                    heuristics_B[h_idx][instance_idx] = h_good[h_idx]
+                    heuristics_A[h_idx][instance_idx] = h_bad[h_idx]
+
         for features in [v_features_A, e_features_A, v_features_B, e_features_B]:
             for feature in features:
                 for i in range(len(feature)):
                     feature[i] = Variable(torch.from_numpy(feature[i]))
                     if self.gpu:
                         feature[i] = feature[i].cuda()
+        for heuristics in [heuristics_A, heuristics_B]:
+            for i in range(len(heuristics)):
+                heuristics[i] = Variable(torch.from_numpy(heuristics[i]))
+                if self.gpu:
+                    heuristics[i] = heuristics[i].cuda()
         y = Variable(torch.from_numpy(y))
         if self.gpu:
             y = y.cuda()
-        return ((v_features_A, e_features_A), (v_features_B, e_features_B), y)
+        return ((v_features_A, e_features_A), heuristics_A, (v_features_B, e_features_B), heuristics_B, y)
 
     def get_test_pairs(self, randomize_dir=True, return_id=False):
         '''
@@ -176,8 +199,8 @@ class Dataset:
         if for i-th problem, the good chain is in X_A, then y[i]==1, else y[i]==0
         '''
         N = len(self.test_pairs)
-        v_features_A, e_features_A = self.prepare_feature_placeholder(N)
-        v_features_B, e_features_B = self.prepare_feature_placeholder(N)
+        v_features_A, e_features_A, heuristics_A = self.prepare_feature_placeholder(N)
+        v_features_B, e_features_B, heuristics_B = self.prepare_feature_placeholder(N)
         y = np.zeros(N, dtype='int64')
         if return_id:
             ids = [[], []]
@@ -187,8 +210,8 @@ class Dataset:
             if randomize_dir:
                 good = good[:-1]+random.choice(['f','r'])
                 bad = bad[:-1]+random.choice(['f','r'])
-            v_good, e_good = self.get_features(good)
-            v_bad, e_bad = self.get_features(bad)
+            v_good, e_good, h_good = self.get_features(good)
+            v_bad, e_bad, h_bad = self.get_features(bad)
             v_good, e_good, v_bad, e_bad = list(v_good), list(e_good), list(v_bad), list(e_bad)
 
             label = random.random()>0.5
@@ -218,19 +241,32 @@ class Dataset:
                         e_features_B[e_idx][e_fea_idx][instance_idx] = e_good[e_idx][e_fea_idx]
                         e_features_A[e_idx][e_fea_idx][instance_idx] = e_bad[e_idx][e_fea_idx]
 
+            for h_idx in range(len(h_good)):
+                if label:
+                    heuristics_A[h_idx][instance_idx] = h_good[h_idx]
+                    heuristics_B[h_idx][instance_idx] = h_bad[h_idx]
+                else:
+                    heuristics_B[h_idx][instance_idx] = h_good[h_idx]
+                    heuristics_A[h_idx][instance_idx] = h_bad[h_idx]
+
         for features in [v_features_A, e_features_A, v_features_B, e_features_B]:
             for feature in features:
                 for i in range(len(feature)):
                     feature[i] = Variable(torch.from_numpy(feature[i]))
                     if self.gpu:
                         feature[i] = feature[i].cuda()
+        for heuristics in [heuristics_A, heuristics_B]:
+            for i in range(len(heuristics)):
+                heuristics[i] = Variable(torch.from_numpy(heuristics[i]))
+                if self.gpu:
+                    heuristics[i] = heuristics[i].cuda()
         y = Variable(torch.from_numpy(y))
         if self.gpu:
             y = y.cuda()
         if not return_id:
-            return (v_features_A, e_features_A), (v_features_B, e_features_B), y
+            return (v_features_A, e_features_A), heuristics_A, (v_features_B, e_features_B), heuristics_B, y
         else:
-            return (v_features_A, e_features_A), (v_features_B, e_features_B), y, ids
+            return (v_features_A, e_features_A), heuristics_A, (v_features_B, e_features_B), heuristics_B, y, ids
 
     def get_pairs_for_ids(self, ids):
         '''
@@ -242,12 +278,12 @@ class Dataset:
         currently only keeping chains of length 4
         '''
         N = len(ids)
-        v_features_A, e_features_A = self.prepare_feature_placeholder(N)
-        v_features_B, e_features_B = self.prepare_feature_placeholder(N)
+        v_features_A, e_features_A, heuristics_A = self.prepare_feature_placeholder(N)
+        v_features_B, e_features_B, heuristics_B = self.prepare_feature_placeholder(N)
 
         for instance_idx, (first, second) in enumerate(ids):
-            v_first, e_first = self.get_features(first)
-            v_second, e_second = self.get_features(second)
+            v_first, e_first, h_first = self.get_features(first)
+            v_second, e_second, h_second = self.get_features(second)
 
             for v_idx in range(4):
                 for v_fea_idx in range(len(v_first[v_idx])):
@@ -259,10 +295,111 @@ class Dataset:
                     e_features_A[e_idx][e_fea_idx][instance_idx] = e_first[e_idx][e_fea_idx]
                     e_features_B[e_idx][e_fea_idx][instance_idx] = e_second[e_idx][e_fea_idx]
 
+            for h_idx in range(len(h_first)):
+                heuristics_A[h_idx][instance_idx] = h_first[h_idx]
+                heuristics_B[h_idx][instance_idx] = h_second[h_idx]
+
         for features in [v_features_A, e_features_A, v_features_B, e_features_B]:
             for feature in features:
                 for i in range(len(feature)):
                     feature[i] = Variable(torch.from_numpy(feature[i]))
                     if self.gpu:
                         feature[i] = feature[i].cuda()
-        return ((v_features_A, e_features_A), (v_features_B, e_features_B))
+        for heuristics in [heuristics_A, heuristics_B]:
+            for i in range(len(heuristics)):
+                heuristics[i] = Variable(torch.from_numpy(heuristics[i]))
+                if self.gpu:
+                    heuristics[i] = heuristics[i].cuda()
+        return ((v_features_A, e_features_A), heuristics_A, (v_features_B, e_features_B), heuristics_B)
+
+
+class HeuristicPreprocessor:
+    def __init__(self, name, src_data_path, tgt_dir_path):
+        self.name = name
+        sampled_problems = pickle.load(open(
+            '%s/paths.pkl'%src_data_path, 'rb'), encoding='latin1')
+        self.texts = dict()
+        print('loading problem plain texts')
+        for id_num in sampled_problems:
+            f_short = sampled_problems[id_num]['forward']['short']
+            r_short = sampled_problems[id_num]['reverse']['short']
+            self.texts[id_num+'f'] = f_short
+            self.texts[id_num+'r'] = r_short
+        self.tgt_dir_path = tgt_dir_path
+
+    def _eval_path(self, id_):
+        raise NotImplementedError()
+
+    def calc_heuristics(self):
+        scores = dict()
+        for id_ in self.texts:
+            scores[id_] = self._eval_path(id_)
+        with open('%s/%s.pkl'%(self.tgt_dir_path, self.name), 'wb') as file:
+            pickle.dump(scores, file)
+
+
+class STHeuristicsExtractor(HeuristicPreprocessor):
+    def __init__(self, src_data_path, tgt_dir_path, v_enc_path):
+        super(STHeuristicsExtractor, self).__init__('st', src_data_path, tgt_dir_path)
+        with open(v_enc_path, 'rb') as file:
+            self.v_emb = pickle.load(file, encoding='latin1')
+        self.cos = torch.nn.CosineSimilarity(dim=0)
+
+    def _eval_path(self, id_):
+        emb_data = self.v_emb[id_]
+        score = self.cos(torch.tensor(emb_data[0]), torch.tensor(emb_data[len(emb_data)-1]))
+        return score.item()
+
+
+class PairwiseHeuristicsExtractor(HeuristicPreprocessor):
+    def __init__(self, src_data_path, tgt_dir_path, v_enc_path):
+        super(PairwiseHeuristicsExtractor, self).__init__('pairwise', src_data_path, tgt_dir_path)
+        with open(v_enc_path, 'rb') as file:
+            self.v_emb = pickle.load(file, encoding='latin1')
+        self.cos = torch.nn.CosineSimilarity(dim=0)
+
+    def _eval_path(self, id_):
+        emb_data = self.v_emb[id_]
+        size = len(emb_data)
+        total_score = 0
+        for i in range(size-1):
+            total_score += self.cos(torch.tensor(emb_data[i]), torch.tensor(emb_data[i+1])).item()
+        return total_score / (size+1)
+
+
+class RFHeuristicsExtractor(HeuristicPreprocessor):
+    # simplified: product of degrees (for easier standardization, take log)
+    def __init__(self, src_data_path, tgt_dir_path, v_deg_path):
+        super(RFHeuristicsExtractor, self).__init__('rf', src_data_path, tgt_dir_path)
+        with open(v_deg_path, 'rb') as file:
+            self.v_deg = pickle.load(file, encoding='latin1')
+
+    def _eval_path(self, id_):
+        score = 0
+        deg = self.v_deg[id_]
+        for d in deg:
+            score += np.log(d[0])
+        return score
+
+
+class LengthHeuristicsExtractor(HeuristicPreprocessor):
+    def __init__(self, src_data_path, tgt_dir_path):
+        super(LengthHeuristicsExtractor, self).__init__('length', src_data_path, tgt_dir_path)
+
+    def _eval_path(self, id_):
+        path = self.texts[id_]
+        tokens = path.split()
+        score = len(tokens) // 2 + 1
+        return score
+
+
+if __name__ == '__main__':
+    # prepare heuristics
+    sthe = STHeuristicsExtractor('../data/science', '../prepare_data/heuristics', '../prepare_data/features/v_enc_embedding.pkl')
+    sthe.calc_heuristics()
+    phe = PairwiseHeuristicsExtractor('../data/science', '../prepare_data/heuristics', '../prepare_data/features/v_enc_embedding.pkl')
+    phe.calc_heuristics()
+    rfhe = RFHeuristicsExtractor('../data/science', '../prepare_data/heuristics', '../prepare_data/features/v_deg.pkl')
+    rfhe.calc_heuristics()
+    lhe = LengthHeuristicsExtractor('../data/science', '../prepare_data/heuristics')
+    lhe.calc_heuristics()
