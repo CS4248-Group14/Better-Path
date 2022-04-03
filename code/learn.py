@@ -8,10 +8,10 @@ from model import ChainEncoder, Predictor, AlternateChainEncoder, ConcatChainEnc
 from dataset import Dataset
 from multiprocessing import Pool
 
-def train(dataset, features, heuristics, fea_len, split_frac, out_file, gpu, max_iter, batch_size, ckpt_path):
+def train(dataset, features, heuristics, fea_len, split_frac, out_file, use_gpu, max_iter, batch_size, ckpt_path):
     if isinstance(out_file, str):
         out_file = open(out_file, 'w')
-    d = Dataset(features, heuristics, split_frac, gpu, '../prepare_data/features', '../prepare_data/heuristics', '../data/%s'%dataset)
+    d = Dataset(features, heuristics, split_frac, use_gpu, '../prepare_data/features', '../prepare_data/heuristics', f'../data/{dataset}')
     print('defining architecture')
     # enc = ChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
     enc = AlternateChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
@@ -19,7 +19,7 @@ def train(dataset, features, heuristics, fea_len, split_frac, out_file, gpu, max
     
     predictor = Predictor(fea_len + len(heuristics))
     loss = nn.NLLLoss()
-    if gpu:
+    if use_gpu:
         enc.cuda()
         predictor.cuda()
         loss.cuda()
@@ -62,15 +62,11 @@ def train(dataset, features, heuristics, fea_len, split_frac, out_file, gpu, max
     out_file.close()
 
 
-def main():
+if __name__ == '__main__':
     features = ['v_enc_dim300', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
                 'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel', 'e_sense']
     # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     # heuristics = ['st', 'pairwise', 'rf', 'length']
     heuristics = []
-    train('science', features, heuristics, 20, 0.8, 'science_train.log', False, 4000, 1000, 'science_ckpt')
+    train('science', features, heuristics, 20, 0.8, 'science_train.log', False, 100, 1000, 'science_ckpt')
     # train('open_domain', features, 10, 0.95, 'open_domain_train.log', False, 12000, 100, 'open_domain_ckpt')
-
-
-if __name__ == '__main__':
-    main()

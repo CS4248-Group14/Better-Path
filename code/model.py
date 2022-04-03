@@ -5,6 +5,7 @@ import torch
 from torch import nn
 from torch.autograd import Variable
 
+
 class FeatureTransformer(nn.Module):
     '''
     take an n x d_in matrix and transform it into a n x d_out matrix
@@ -24,12 +25,14 @@ class FeatureTransformer(nn.Module):
         return self.relu(self.linear(input))
         # return self.relu(self.linear2(self.relu_m(self.linear1(input))))
 
+
 class ChainEncoder(nn.Module):
     '''
     encodes N chains at the same time
     assumes that each of the chains are of the same length
     '''
-    def __init__(self, v_feature_lengths, e_feature_lengths, out_length, pooling):
+    def __init__(self, v_feature_lengths, e_feature_lengths, out_length,
+                 pooling):
         super(ChainEncoder, self).__init__()
         feature_enc_length = out_length
         num_layers = 1
@@ -40,15 +43,19 @@ class ChainEncoder(nn.Module):
         self.v_fea_encs = nn.ModuleList()
         self.e_fea_encs = nn.ModuleList()
         for d_in in self.v_feature_lengths:
-            self.v_fea_encs.append(FeatureTransformer(d_in, feature_enc_length))
+            self.v_fea_encs.append(FeatureTransformer(d_in,
+                                                      feature_enc_length))
         for d_in in self.e_feature_lengths:
-            self.e_fea_encs.append(FeatureTransformer(d_in, feature_enc_length))
-        if self.rnn_type=='RNN':
+            self.e_fea_encs.append(FeatureTransformer(d_in,
+                                                      feature_enc_length))
+        if self.rnn_type == 'RNN':
             self.rnn = nn.RNN(input_size=feature_enc_length,
-                              hidden_size=out_length, num_layers=num_layers)
-        elif self.rnn_type=='LSTM':
+                              hidden_size=out_length,
+                              num_layers=num_layers)
+        elif self.rnn_type == 'LSTM':
             self.lstm = nn.LSTM(input_size=feature_enc_length,
-                                hidden_size=out_length, num_layers=num_layers)
+                                hidden_size=out_length,
+                                num_layers=num_layers)
 
     def forward(self, input):
         '''
@@ -82,42 +89,49 @@ class ChainEncoder(nn.Module):
             e_enc = e_enc / len(e_features[i])
             e_encs.append(e_enc)
 
-        combined_encs = [0] * (len(v_encs)+len(e_encs))
+        combined_encs = [0] * (len(v_encs) + len(e_encs))
         combined_encs[::2] = v_encs
         combined_encs[1::2] = e_encs
         combined_encs = torch.stack(combined_encs, dim=0)
         # combined_encs has shape (#V+#E) x batch_size x out_length
-        if self.rnn_type=='RNN':
+        if self.rnn_type == 'RNN':
             output, hidden = self.rnn(combined_encs)
-        elif self.rnn_type=='LSTM':
+        elif self.rnn_type == 'LSTM':
             output, (hidden, cell) = self.lstm(combined_encs)
-        if self.pooling=='last':
+        if self.pooling == 'last':
             return output[-1]
         else:
             return torch.mean(output, dim=0)
+
 
 class ConcatChainEncoder(ChainEncoder):
     # TODO: @Tian Fang, concatenation instead of taking average
     pass
 
+
 class ConcatChainEncoder_Brendan(nn.Module):
     '''
     concatenation instead of taking average
     '''
-    def __init__(self, v_feature_lengths, e_feature_lengths, out_length, pooling):
+    def __init__(self, v_feature_lengths, e_feature_lengths, out_length,
+                 pooling):
         super(ConcatChainEncoder_Brendan, self).__init__()
         feature_enc_length = out_length
         num_layers = 1
         self.rnn_type = 'LSTM'
         self.pooling = pooling
-        self.v_fea_enc = (FeatureTransformer(sum(v_feature_lengths), feature_enc_length))
-        self.e_fea_enc = (FeatureTransformer(sum(e_feature_lengths), feature_enc_length))
-        if self.rnn_type=='RNN':
+        self.v_fea_enc = (FeatureTransformer(sum(v_feature_lengths),
+                                             feature_enc_length))
+        self.e_fea_enc = (FeatureTransformer(sum(e_feature_lengths),
+                                             feature_enc_length))
+        if self.rnn_type == 'RNN':
             self.rnn = nn.RNN(input_size=feature_enc_length,
-                              hidden_size=out_length, num_layers=num_layers)
-        elif self.rnn_type=='LSTM':
+                              hidden_size=out_length,
+                              num_layers=num_layers)
+        elif self.rnn_type == 'LSTM':
             self.lstm = nn.LSTM(input_size=feature_enc_length,
-                                hidden_size=out_length, num_layers=num_layers)
+                                hidden_size=out_length,
+                                num_layers=num_layers)
 
     def forward(self, input):
         '''
@@ -141,19 +155,20 @@ class ConcatChainEncoder_Brendan(nn.Module):
             e_encs.append(e_enc)
 
         ## (b) the encoding of the path
-        combined_encs = [0] * (len(v_encs)+len(e_encs))
+        combined_encs = [0] * (len(v_encs) + len(e_encs))
         combined_encs[::2] = v_encs
         combined_encs[1::2] = e_encs
         combined_encs = torch.stack(combined_encs, dim=0)
         # combined_encs has shape (#V+#E) x batch_size x out_length
-        if self.rnn_type=='RNN':
+        if self.rnn_type == 'RNN':
             output, hidden = self.rnn(combined_encs)
-        elif self.rnn_type=='LSTM':
+        elif self.rnn_type == 'LSTM':
             output, (hidden, cell) = self.lstm(combined_encs)
-        if self.pooling=='last':
+        if self.pooling == 'last':
             return output[-1]
         else:
             return torch.mean(output, dim=0)
+
 
 class AlternateChainEncoder(nn.Module):
     '''
@@ -161,18 +176,21 @@ class AlternateChainEncoder(nn.Module):
     instead, each chain consists of one vertex and one edge
     chains are therefore still of same length
     '''
-    def __init__(self, v_feature_lengths, e_feature_lengths, out_length, pooling):
+    def __init__(self, v_feature_lengths, e_feature_lengths, out_length,
+                 pooling):
         super(AlternateChainEncoder, self).__init__()
         feature_enc_length = sum(v_feature_lengths) + sum(e_feature_lengths)
         num_layers = 1
         self.rnn_type = 'LSTM'
         self.pooling = pooling
-        if self.rnn_type=='RNN':
+        if self.rnn_type == 'RNN':
             self.rnn = nn.RNN(input_size=feature_enc_length,
-                              hidden_size=out_length, num_layers=num_layers)
-        elif self.rnn_type=='LSTM':
+                              hidden_size=out_length,
+                              num_layers=num_layers)
+        elif self.rnn_type == 'LSTM':
             self.lstm = nn.LSTM(input_size=feature_enc_length,
-                                hidden_size=out_length, num_layers=num_layers)
+                                hidden_size=out_length,
+                                num_layers=num_layers)
 
     def forward(self, input):
         '''
@@ -194,7 +212,9 @@ class AlternateChainEncoder(nn.Module):
             e_encs.append(e_enc)
 
         ## (a2) concatenating vertex i with edge i-1
-        dummy_edge_enc = torch.zeros(e_encs[0].shape)  # initialize dummy edge (TODO: test other initializations)
+        dummy_edge_enc = torch.zeros(
+            e_encs[0].shape
+        )  # initialize dummy edge (TODO: test other initializations)
         e_encs = [dummy_edge_enc] + e_encs  # adding dummy edge at the start
         concat_encs = []
         for v_enc, e_enc in zip(v_encs, e_encs):
@@ -204,14 +224,15 @@ class AlternateChainEncoder(nn.Module):
         ## (b) the encoding of the path
         combined_encs = torch.stack(concat_encs, dim=0)
         # combined_encs has shape (#V) x batch_size x feature_enc_length
-        if self.rnn_type=='RNN':
+        if self.rnn_type == 'RNN':
             output, hidden = self.rnn(combined_encs)
-        elif self.rnn_type=='LSTM':
+        elif self.rnn_type == 'LSTM':
             output, (hidden, cell) = self.lstm(combined_encs)
-        if self.pooling=='last':
+        if self.pooling == 'last':
             return output[-1]
         else:
             return torch.mean(output, dim=0)
+
 
 class Predictor(nn.Module):
     '''
@@ -229,5 +250,3 @@ class Predictor(nn.Module):
         b = self.linear2(self.relu(self.linear1(vec2)))
         combined = torch.cat((a, b), dim=1)
         return self.logsoftmax(combined)
-
-
