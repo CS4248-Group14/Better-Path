@@ -12,6 +12,11 @@ Some changes are done to all `Python` files for it to be compatible in `Python3`
 
 `feature.py` is created from scratch:
 1. [DONE by Wang Qian] Create L2 feature extractor
+2. [DONE by Tian Fang] Create L1 feature extractor
+
+`ablation_study.py` is created from scratch:
+1. [DONE by Tian Fang] Integrate everyone's work (and make necessary changes in corresponding files).
+2. [DONE by Tian Fang] Create multiple functions to perform ablation study on features, heuristics, encoder, and multilayer
 
 `dataset.py` is adapted from `code/science/dataset.py`.
 Main changes:
@@ -28,5 +33,6 @@ Main changes:
 
 `learn.py` is adapted from `code/science/learn.py`.
 Main changes:
-2. [DONE by Jiayu] Concat path heuristics in training.
+1. [DONE by Jiayu] Concat path heuristics in training.
+2. [DONE by Tian Fang] Added Enum class EncoderType and add various input parameters to the `train()` method to facilitate ablation study
 

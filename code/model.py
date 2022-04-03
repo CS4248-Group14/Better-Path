@@ -1,9 +1,5 @@
-from __future__ import division
-
-import numpy as np
 import torch
 from torch import nn
-from torch.autograd import Variable
 
 
 class FeatureTransformer(nn.Module):
@@ -12,7 +8,7 @@ class FeatureTransformer(nn.Module):
     where the n x d_in matrix is the n examples each with d_in dimensions
     '''
     def __init__(self, d_in, d_out):
-        super(FeatureTransformer, self).__init__()
+        super().__init__()
         self.d_in = d_in
         self.d_out = d_out
         self.linear = nn.Linear(d_in, d_out)
@@ -32,11 +28,11 @@ class ChainEncoder(nn.Module):
     assumes that each of the chains are of the same length
     '''
     def __init__(self, v_feature_lengths, e_feature_lengths, out_length,
-                 pooling):
+                 rnn_type, pooling):
         super().__init__()
         feature_enc_length = out_length
         num_layers = 1
-        self.rnn_type = 'LSTM'
+        self.rnn_type = rnn_type
         self.pooling = pooling
         self.v_feature_lengths = v_feature_lengths
         self.e_feature_lengths = e_feature_lengths
@@ -109,11 +105,11 @@ class ConcatChainEncoder(nn.Module):
     concatenation instead of taking average
     '''
     def __init__(self, v_feature_lengths, e_feature_lengths, out_length,
-                 pooling):
+                 rnn_type, pooling):
         super().__init__()
         feature_enc_length = out_length
         num_layers = 1
-        self.rnn_type = 'LSTM'
+        self.rnn_type = rnn_type
         self.pooling = pooling
         self.v_fea_enc = (FeatureTransformer(sum(v_feature_lengths),
                                              feature_enc_length))
@@ -172,11 +168,11 @@ class AlternateChainEncoder(nn.Module):
     chains are therefore still of same length
     '''
     def __init__(self, v_feature_lengths, e_feature_lengths, out_length,
-                 pooling):
+                 rnn_type, pooling):
         super().__init__()
         feature_enc_length = sum(v_feature_lengths) + sum(e_feature_lengths)
         num_layers = 1
-        self.rnn_type = 'LSTM'
+        self.rnn_type = rnn_type
         self.pooling = pooling
         if self.rnn_type == 'RNN':
             self.rnn = nn.RNN(input_size=feature_enc_length,
@@ -233,15 +229,22 @@ class Predictor(nn.Module):
     '''
     takes two feature vectors and produces a prediction
     '''
-    def __init__(self, feature_len):
-        super(Predictor, self).__init__()
+    def __init__(self, feature_len, use_multilayer=False):
+        super().__init__()
+        self.use_multilayer = use_multilayer
+        self.linear = nn.Linear(feature_len, 1)
         self.linear1 = nn.Linear(feature_len, 100)
         self.relu = nn.ReLU(inplace=False)
         self.linear2 = nn.Linear(100, 1)
         self.logsoftmax = nn.LogSoftmax(dim=1)
 
     def forward(self, vec1, vec2):
-        a = self.linear2(self.relu(self.linear1(vec1)))
-        b = self.linear2(self.relu(self.linear1(vec2)))
+
+        if self.use_multilayer:
+            a = self.linear2(self.relu(self.linear1(vec1)))
+            b = self.linear2(self.relu(self.linear1(vec2)))
+        else:
+            a = self.linear(vec1)
+            b = self.linear(vec2)
         combined = torch.cat((a, b), dim=1)
         return self.logsoftmax(combined)

@@ -1,24 +1,40 @@
+import pathlib
 import torch
 from torch import nn, optim
 from model import ChainEncoder, Predictor, AlternateChainEncoder, ConcatChainEncoder
 from dataset import Dataset
 from multiprocessing import Pool
+from enum import Enum
 
 
-def train(dataset, features, heuristics, fea_len, split_frac, out_file,
-          use_gpu, max_iter, batch_size, ckpt_path):
-    if isinstance(out_file, str):
-        out_file = open(out_file, 'w')
+class EncoderType(Enum):
+    BASIC = 0
+    ALTERNATE = 1
+    CONCAT = 2
+
+
+def train(dataset, features, heuristics, encoder_type, rnn_type, fea_len,
+          use_multilayer, split_frac, out_path, use_gpu, max_iter, batch_size):
+    ckpt_path = out_path + 'science_ckpt'
+    if isinstance(out_path, str):
+        path = pathlib.Path(out_path)
+        path.mkdir(parents=True, exist_ok=True)
+        out_file = open(out_path + 'science_train.log', 'w')
     d = Dataset(features, heuristics, split_frac, use_gpu,
                 '../prepare_data/features', '../prepare_data/heuristics',
                 f'../data/{dataset}')
     print('defining architecture')
-    # enc = ChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
-    enc = AlternateChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len,
-                                'last')
-    # enc = ConcatChainEncoder_Brendan(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
+    if encoder_type == EncoderType.BASIC:
+        enc = ChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len,
+                           rnn_type, 'last')
+    elif encoder_type == EncoderType.ALTERNATE:
+        enc = AlternateChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(),
+                                    fea_len, rnn_type, 'last')
+    else:
+        enc = ConcatChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len,
+                                 rnn_type, 'last')
 
-    predictor = Predictor(fea_len + len(heuristics))
+    predictor = Predictor(fea_len + len(heuristics), use_multilayer)
     loss = nn.NLLLoss()
     if use_gpu:
         enc.cuda()
@@ -59,6 +75,8 @@ def train(dataset, features, heuristics, fea_len, split_frac, out_file,
             print(train_iter, 'test acc:', cur_acc)
         out_file.write('%f\n' % cur_acc)
         if train_iter % 50 == 0:
+            path = pathlib.Path(ckpt_path)
+            path.mkdir(parents=True, exist_ok=True)
             torch.save(enc.state_dict(),
                        '%s/%i_encoder.model' % (ckpt_path, train_iter))
             torch.save(predictor.state_dict(),
@@ -68,13 +86,13 @@ def train(dataset, features, heuristics, fea_len, split_frac, out_file,
 
 if __name__ == '__main__':
     features = [
-        'v_enc_dim300', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
+        'v_enc_dim100', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
         'e_vertexl1dist', 'e_vertexl2dist', 'e_dir', 'e_rel', 'e_weightsource',
         'e_srank_rel', 'e_trank_rel', 'e_sense'
     ]
     # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     # heuristics = ['st', 'pairwise', 'rf', 'length']
-    heuristics = ['st']
-    train('science', features, heuristics, 100, 0.8, 'science_train.log',
-          False, 4000, 1024, 'science_ckpt')
+    heuristics = []
+    train('science', features, heuristics, EncoderType.CONCAT, 'LSTM', 10,
+          False, 0.8, './', False, 4000, 1024)
     # train('open_domain', features, heuristics, 10, 0.95, 'open_domain_train.log', False, 100, 100, 'open_domain_ckpt')
