@@ -25,9 +25,9 @@ Main changes:
 
 `model.py` is adapted from `code/science/model.py`.
 Main changes:
-2. [DONE by Jiayu] Modify to avoid `RuntimeError` caused by inplace update (under CPU environment).
-3. [DONE by Brendan] Two modified encoding methods (with dimension unification).
-4. [DONE by Jiayu] More layers for predictor. 
+1. [DONE by Jiayu] Modify to avoid `RuntimeError` caused by inplace update (under CPU environment).
+2. [DONE by Brendan] Two modified encoding methods (with dimension unification).
+3. [DONE by Jiayu] More layers for predictor. 
    (Also commented a multi-layer model for `FeatureTransformer`, but not directly used because by experiments it 
    doesn't show great advantage. See [Experiment Results](../analysis/experiment_data.xlsx).)
 
