@@ -78,9 +78,9 @@ class Dataset:
         self.heuristic_names = heuristic_names
         self.cached_heuristics = dict()
         for h in self.heuristic_names:
-            with open(f'{heuristics_src_path}/{h}.pkl') as f:
+            with open(f'{heuristics_src_path}/{h}.pkl', 'rb') as f:
                 print('loading heuristic:', h)
-                self.cached_heuristics[h] = pickle.load(f, 'rb')
+                self.cached_heuristics[h] = pickle.load(f)
 
     def __init__(self,
                  feature_names,

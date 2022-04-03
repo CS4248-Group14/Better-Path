@@ -33,7 +33,7 @@ class ChainEncoder(nn.Module):
     '''
     def __init__(self, v_feature_lengths, e_feature_lengths, out_length,
                  pooling):
-        super(ChainEncoder, self).__init__()
+        super().__init__()
         feature_enc_length = out_length
         num_layers = 1
         self.rnn_type = 'LSTM'
@@ -115,7 +115,7 @@ class ConcatChainEncoder_Brendan(nn.Module):
     '''
     def __init__(self, v_feature_lengths, e_feature_lengths, out_length,
                  pooling):
-        super(ConcatChainEncoder_Brendan, self).__init__()
+        super().__init__()
         feature_enc_length = out_length
         num_layers = 1
         self.rnn_type = 'LSTM'

@@ -1,9 +1,5 @@
-from __future__ import division
-
-import numpy as np
-import torch, sys, os
+import torch
 from torch import nn, optim
-from torch.autograd import Variable
 from model import ChainEncoder, Predictor, AlternateChainEncoder, ConcatChainEncoder_Brendan
 from dataset import Dataset
 from multiprocessing import Pool
@@ -78,7 +74,7 @@ if __name__ == '__main__':
     ]
     # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     # heuristics = ['st', 'pairwise', 'rf', 'length']
-    heuristics = []
+    heuristics = ['st']
     train('science', features, heuristics, 20, 0.8, 'science_train.log', False,
           100, 1000, 'science_ckpt')
     # train('open_domain', features, heuristics, 10, 0.95, 'open_domain_train.log', False, 100, 100, 'open_domain_ckpt')
