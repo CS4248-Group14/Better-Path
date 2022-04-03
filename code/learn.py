@@ -1,6 +1,6 @@
 import torch
 from torch import nn, optim
-from model import ChainEncoder, Predictor, AlternateChainEncoder, ConcatChainEncoder_Brendan
+from model import ChainEncoder, Predictor, AlternateChainEncoder, ConcatChainEncoder
 from dataset import Dataset
 from multiprocessing import Pool
 
@@ -69,12 +69,12 @@ def train(dataset, features, heuristics, fea_len, split_frac, out_file,
 if __name__ == '__main__':
     features = [
         'v_enc_dim300', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
-        'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel',
-        'e_sense'
+        'e_vertexl1dist', 'e_vertexl2dist', 'e_dir', 'e_rel', 'e_weightsource',
+        'e_srank_rel', 'e_trank_rel', 'e_sense'
     ]
     # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     # heuristics = ['st', 'pairwise', 'rf', 'length']
     heuristics = ['st']
-    train('science', features, heuristics, 20, 0.8, 'science_train.log', False,
-          100, 1000, 'science_ckpt')
+    train('science', features, heuristics, 100, 0.8, 'science_train.log',
+          False, 4000, 1024, 'science_ckpt')
     # train('open_domain', features, heuristics, 10, 0.95, 'open_domain_train.log', False, 100, 100, 'open_domain_ckpt')

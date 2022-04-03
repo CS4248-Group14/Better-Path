@@ -20,6 +20,8 @@ all_feature_lengths = {
     'v_deg': 1,
     'v_sense': 1,
     'e_vertexsim': 1,
+    'e_vertexl1dist': 1,
+    'e_vertexl2dist': 1,
     'e_dir': 3,
     'e_rel': 46,
     'e_weight': 1,
@@ -31,8 +33,6 @@ all_feature_lengths = {
     'e_trank_rel': 1,
     'e_sense': 1
 }
-# TODO: @Wang Qian, add e_xx here
-# TODO: @Jiayu, add heuristic extraction util here
 
 
 class Dataset:

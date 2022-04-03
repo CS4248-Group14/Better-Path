@@ -104,12 +104,7 @@ class ChainEncoder(nn.Module):
             return torch.mean(output, dim=0)
 
 
-class ConcatChainEncoder(ChainEncoder):
-    # TODO: @Tian Fang, concatenation instead of taking average
-    pass
-
-
-class ConcatChainEncoder_Brendan(nn.Module):
+class ConcatChainEncoder(nn.Module):
     '''
     concatenation instead of taking average
     '''
@@ -178,7 +173,7 @@ class AlternateChainEncoder(nn.Module):
     '''
     def __init__(self, v_feature_lengths, e_feature_lengths, out_length,
                  pooling):
-        super(AlternateChainEncoder, self).__init__()
+        super().__init__()
         feature_enc_length = sum(v_feature_lengths) + sum(e_feature_lengths)
         num_layers = 1
         self.rnn_type = 'LSTM'
