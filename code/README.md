@@ -17,6 +17,7 @@ Some changes are done to all `Python` files for it to be compatible in `Python3`
 `ablation_study.py` is created from scratch:
 1. [DONE by Tian Fang] Integrate everyone's work (and make necessary changes in corresponding files).
 2. [DONE by Tian Fang] Create multiple functions to perform ablation study on features, heuristics, encoder, and multilayer
+3. [DONE by Tian Fang] Speed up ablation study via `multiprocessing`
 
 `dataset.py` is adapted from `code/science/dataset.py`.
 Main changes:
