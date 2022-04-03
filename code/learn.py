@@ -4,7 +4,7 @@ import numpy as np
 import torch, sys, os
 from torch import nn, optim
 from torch.autograd import Variable
-from model import ChainEncoder, Predictor
+from model import ChainEncoder, Predictor, AlternateChainEncoder, ConcatChainEncoder_Brendan
 from dataset import Dataset
 from multiprocessing import Pool
 
@@ -12,7 +12,11 @@ def train(dataset, features, heuristics, fea_len, split_frac, out_file, gpu, max
     if isinstance(out_file, str):
         out_file = open(out_file, 'w')
     d = Dataset(features, heuristics, split_frac, gpu, '../prepare_data/features', '../prepare_data/heuristics', '../data/%s'%dataset)
-    enc = ChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
+    print('defining architecture')
+    # enc = ChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
+    enc = AlternateChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
+    # enc = ConcatChainEncoder_Brendan(d.get_v_fea_len(), d.get_e_fea_len(), fea_len, 'last')
+    
     predictor = Predictor(fea_len + len(heuristics))
     loss = nn.NLLLoss()
     if gpu:
