@@ -3,29 +3,36 @@ Code here is largely adapted from Zhou et al.'s original work from
 
 Some changes are done to all `Python` files for it to be compatible in `Python3`, including
 1. Change `print xx` to `print(xx)`.
-1. Replace `xrange` with `range`.
-1. Add `encoding='latin1'` for pickle loading.
-1. Convert `zip` results to `list` before subscripting.
+2. Replace `xrange` with `range`.
+3. Add `encoding='latin1'` for pickle loading.
+4. Convert `zip` results to `list` before subscripting.
+
+`heuristic.py` is created from scratch:
+1. [DONE by Jiayu] Create multiple heuristic extractors and prepares cached heuristics.
+
+`feature.py` is created from scratch:
+1. [DONE by Wang Qian] Create L2 feature extractor
+2. [DONE by Tian Fang] Create L1 feature extractor
+
+`ablation_study.py` is created from scratch:
+1. [DONE by Tian Fang] Integrate everyone's work (and make necessary changes in corresponding files).
+2. [DONE by Tian Fang] Create multiple functions to perform ablation study on features, heuristics, encoder, and multilayer
 
 `dataset.py` is adapted from `code/science/dataset.py`.
-Changes:
-1. [DONE by Jiayu] Add two parameters for feature and data paths respectively in class constructor (for implementation flexibility).
-1. [TODO @Wang Qian] New features for edges.
-1. [DONE by Jiayu] Prepare cached heuristics.
-1. [TODO @Jiayu] Path heuristics util.
+Main changes:
+1. [DONE by Tian Fang] Extract methods related to loading pre-generated files, and fix Zhou's mistake of not closing file descriptor.
+2. [DONE by Wang Qian] New features for edges: vertex norm
 
 `model.py` is adapted from `code/science/model.py`.
-Changes:
-1. [DONE by Jiayu] Modify to avoid `RuntimeError` caused by inplace update (under CPU environment).
-1. [TODO @Tian Fang, @Brendan] Two modified encoding methods (with dimension unification).
-1. [DONE by Jiayu] More layers for predictor. 
+Main changes:
+2. [DONE by Jiayu] Modify to avoid `RuntimeError` caused by inplace update (under CPU environment).
+3. [DONE by Brendan] Two modified encoding methods (with dimension unification).
+4. [DONE by Jiayu] More layers for predictor. 
    (Also commented a multi-layer model for `FeatureTransformer`, but not directly used because by experiments it 
    doesn't show great advantage. See [Experiment Results](../analysis/experiment_data.xlsx).)
 
 `learn.py` is adapted from `code/science/learn.py`.
-Changes:
-1. [DONE by Jiayu] Wrap code in main function.
-1. [DONE by Jiayu] Update paths according to configuration in our project.
-1. [DONE by Jiayu] Add more hyperparameters to `train` function.
-1. [TODO @Jiayu] Concat path heuristics in training.
+Main changes:
+1. [DONE by Jiayu] Concat path heuristics in training.
+2. [DONE by Tian Fang] Added Enum class EncoderType and add various input parameters to the `train()` method to facilitate ablation study
 
