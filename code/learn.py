@@ -15,6 +15,7 @@ class EncoderType(Enum):
 
 def train(dataset, features, heuristics, encoder_type, rnn_type, fea_len,
           use_multilayer, split_frac, out_path, use_gpu, max_iter, batch_size):
+    # here the fea_len means the feature length of a path
     ckpt_path = out_path + 'science_ckpt'
     if isinstance(out_path, str):
         path = pathlib.Path(out_path)
@@ -87,12 +88,12 @@ def train(dataset, features, heuristics, encoder_type, rnn_type, fea_len,
 if __name__ == '__main__':
     features = [
         'v_enc_dim100', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
-        'e_vertexl1dist', 'e_vertexl2dist', 'e_dir', 'e_rel', 'e_weightsource',
-        'e_srank_rel', 'e_trank_rel', 'e_sense'
+        'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel',
+        'e_sense', 'e_vertexl1dist'
     ]
+    heuristics = ['pairwise']
     # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     # heuristics = ['st', 'pairwise', 'rf', 'length']
-    heuristics = []
-    train('science', features, heuristics, EncoderType.CONCAT, 'LSTM', 10,
-          False, 0.8, './', False, 4000, 1024)
+    train('science', features, heuristics, EncoderType.CONCAT, 'TransformerEncoder', 10,
+          True, 0.8, './TRANSFORMER/', False, 4000, 1024)
     # train('open_domain', features, heuristics, 10, 0.95, 'open_domain_train.log', False, 100, 100, 'open_domain_ckpt')

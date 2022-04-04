@@ -31,6 +31,7 @@ Main changes:
 3. [DONE by Jiayu] More layers for predictor. 
    (Also commented a multi-layer model for `FeatureTransformer`, but not directly used because by experiments it 
    doesn't show great advantage. See [Experiment Results](../analysis/experiment_data.xlsx).)
+4. [DONE by Tian Fang] Modify Predictor to allow turning multilayer on and off.
 
 `learn.py` is adapted from `code/science/learn.py`.
 Main changes:

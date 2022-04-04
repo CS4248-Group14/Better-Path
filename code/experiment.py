@@ -65,8 +65,8 @@ def ablation_heuristics():
 
 
 # Results: using the encoder that concatenating features/heuristics instead of averaging them yields the best results
-def ablation_encoders():
-    folder = 'ablation_encoders/'
+def experiment_encoders():
+    folder = 'experiment_encoders/'
     features = [
         'v_enc_dim100', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
         'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel',
@@ -105,8 +105,28 @@ def ablation_multilayer():
     p.starmap(train, input_args)
 
 
+def experiment_rnn_types():
+    folder = 'experiment_rnn_types/'
+    features = [
+        'v_enc_dim100', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
+        'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel',
+        'e_sense', 'e_vertexl1dist'
+    ]
+    heuristics = ['pairwise']
+    input_args = []
+    for rnn_type in ['TransformerEncoder']:
+        # From multilayer ablation study, we know that multilayer is helpful to the performance
+        input_args.append([
+            'science', features, heuristics, EncoderType.CONCAT, rnn_type, 10,
+            True, 0.8, f'{folder}{rnn_type}/', False, MAX_ITER, BATCH_SIZE
+        ])
+    p = Pool(len(input_args))
+    p.starmap(train, input_args)
+
+
 if __name__ == '__main__':
     # ablation_features()
     # ablation_heuristics()
-    # ablation_encoders()
-    ablation_multilayer()
+    # experiment_encoders()
+    # ablation_multilayer()
+    experiment_rnn_types()

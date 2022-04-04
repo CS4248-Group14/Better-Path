@@ -115,6 +115,10 @@ class ConcatChainEncoder(nn.Module):
                                              feature_enc_length))
         self.e_fea_enc = (FeatureTransformer(sum(e_feature_lengths),
                                              feature_enc_length))
+
+        seq_length = 7  # ! Note: this is specific for 'science' paths
+        self.top_linear = nn.Linear(seq_length * feature_enc_length,
+                                    out_length)
         if self.rnn_type == 'RNN':
             self.rnn = nn.RNN(input_size=feature_enc_length,
                               hidden_size=out_length,
@@ -123,6 +127,14 @@ class ConcatChainEncoder(nn.Module):
             self.lstm = nn.LSTM(input_size=feature_enc_length,
                                 hidden_size=out_length,
                                 num_layers=num_layers)
+        elif self.rnn_type == 'TransformerEncoder':
+            encoder_layer = nn.TransformerEncoderLayer(
+                d_model=feature_enc_length, nhead=5)
+            self.transformer_encoder = nn.TransformerEncoder(encoder_layer,
+                                                             num_layers=6)
+            # Output from the transformer encoder is seq_length x batch_size x feature_enc_length
+            # we need to swap first two axes and flatten the sequence length dimension
+            # The dimension of the input to the linear linear layer is batch_size x [seq_length x feature_enc_length]
 
     def forward(self, input):
         '''
@@ -146,7 +158,8 @@ class ConcatChainEncoder(nn.Module):
             e_encs.append(e_enc)
 
         ## (b) the encoding of the path
-        combined_encs = [0] * (len(v_encs) + len(e_encs))
+        seq_length = len(v_encs) + len(e_encs)
+        combined_encs = [0] * seq_length
         combined_encs[::2] = v_encs
         combined_encs[1::2] = e_encs
         combined_encs = torch.stack(combined_encs, dim=0)
@@ -155,10 +168,15 @@ class ConcatChainEncoder(nn.Module):
             output, hidden = self.rnn(combined_encs)
         elif self.rnn_type == 'LSTM':
             output, (hidden, cell) = self.lstm(combined_encs)
-        if self.pooling == 'last':
+        elif self.rnn_type == 'TransformerEncoder':
+            output = self.transformer_encoder(combined_encs)
+        if self.pooling == 'last' and self.rnn_type != 'TransformerEncoder':
             return output[-1]
+        # output size will be batch_size x out_length
         else:
-            return torch.mean(output, dim=0)
+            output = output.permute(1, 0, 2)
+            output = output.flatten(start_dim=1)
+            return self.top_linear(output)
 
 
 class AlternateChainEncoder(nn.Module):
@@ -203,9 +221,7 @@ class AlternateChainEncoder(nn.Module):
             e_encs.append(e_enc)
 
         ## (a2) concatenating vertex i with edge i-1
-        dummy_edge_enc = torch.zeros(
-            e_encs[0].shape
-        )  # initialize dummy edge (TODO: test other initializations)
+        dummy_edge_enc = torch.zeros(e_encs[0].shape)
         e_encs = [dummy_edge_enc] + e_encs  # adding dummy edge at the start
         concat_encs = []
         for v_enc, e_enc in zip(v_encs, e_encs):
