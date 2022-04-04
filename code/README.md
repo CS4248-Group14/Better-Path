@@ -14,7 +14,7 @@ Some changes are done to all `Python` files for it to be compatible in `Python3`
 1. [DONE by Wang Qian] Create L2 feature extractor
 2. [DONE by Tian Fang] Create L1 feature extractor
 
-`ablation_study.py` is created from scratch:
+`experiment.py` is created from scratch:
 1. [DONE by Tian Fang] Integrate everyone's work (and make necessary changes in corresponding files).
 2. [DONE by Tian Fang] Create multiple functions to perform ablation study on features, heuristics, encoder, and multilayer
 3. [DONE by Tian Fang] Speed up ablation study via `multiprocessing`
@@ -32,6 +32,7 @@ Main changes:
    (Also commented a multi-layer model for `FeatureTransformer`, but not directly used because by experiments it 
    doesn't show great advantage. See [Experiment Results](../analysis/experiment_data.xlsx).)
 4. [DONE by Tian Fang] Modify Predictor to allow turning multilayer on and off.
+5. [DONE by Tian Fang] Create Encoder using Transformer's Encoder with a linear layer on top.
 
 `learn.py` is adapted from `code/science/learn.py`.
 Main changes:
