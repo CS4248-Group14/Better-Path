@@ -13,9 +13,8 @@ class EncoderType(Enum):
     CONCAT = 2
 
 
-def train(dataset, features, heuristics, encoder_type, rnn_type, fea_len,
+def train(dataset, features, heuristics, encoder_type, rnn_type, path_code_len,
           use_multilayer, split_frac, out_path, use_gpu, max_iter, batch_size):
-    # here the fea_len means the feature length of a path
     ckpt_path = out_path + 'science_ckpt'
     if isinstance(out_path, str):
         path = pathlib.Path(out_path)
@@ -26,16 +25,16 @@ def train(dataset, features, heuristics, encoder_type, rnn_type, fea_len,
                 f'../data/{dataset}')
     print('defining architecture')
     if encoder_type == EncoderType.BASIC:
-        enc = ChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len,
+        enc = ChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), path_code_len,
                            rnn_type, 'last')
     elif encoder_type == EncoderType.ALTERNATE:
         enc = AlternateChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(),
-                                    fea_len, rnn_type, 'last')
+                                    path_code_len, rnn_type, 'last')
     else:
-        enc = ConcatChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), fea_len,
-                                 rnn_type, 'last')
+        enc = ConcatChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(),
+                                 path_code_len, rnn_type, 'last')
 
-    predictor = Predictor(fea_len + len(heuristics), use_multilayer)
+    predictor = Predictor(path_code_len + len(heuristics), use_multilayer)
     loss = nn.NLLLoss()
     if use_gpu:
         enc.cuda()
