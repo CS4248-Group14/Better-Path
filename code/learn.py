@@ -55,8 +55,8 @@ def train(dataset, features, heuristics, encoder_type, rnn_type, fea_len,
         predictor.zero_grad()
         output_A = enc(chains_A)
         output_B = enc(chains_B)
-        output_A = torch.concat((output_A, *heuristic_A), dim=1)
-        output_B = torch.concat((output_B, *heuristic_B), dim=1)
+        output_A = torch.cat((output_A, *heuristic_A), dim=1)
+        output_B = torch.cat((output_B, *heuristic_B), dim=1)
         softmax_output = predictor(output_A, output_B)
         loss_val = loss(softmax_output, y)
         loss_val.backward()
@@ -66,8 +66,8 @@ def train(dataset, features, heuristics, encoder_type, rnn_type, fea_len,
         predictor.zero_grad()
         output_test_A = enc(test_chain_A)
         output_test_B = enc(test_chain_B)
-        output_test_A = torch.concat((output_test_A, *test_h_A), dim=1)
-        output_test_B = torch.concat((output_test_B, *test_h_B), dim=1)
+        output_test_A = torch.cat((output_test_A, *test_h_A), dim=1)
+        output_test_B = torch.cat((output_test_B, *test_h_B), dim=1)
         softmax_output = predictor(output_test_A,
                                    output_test_B).data.cpu().numpy()
         test_y_pred = softmax_output.argmax(axis=1)
@@ -94,6 +94,7 @@ if __name__ == '__main__':
     heuristics = ['pairwise']
     # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     # heuristics = ['st', 'pairwise', 'rf', 'length']
-    train('science', features, heuristics, EncoderType.CONCAT, 'TransformerEncoder', 10,
-          True, 0.8, './TRANSFORMER/', False, 4000, 1024)
+    train('science', features, heuristics, EncoderType.CONCAT,
+          'TransformerEncoder', 10, True, 0.8, './TRANSFORMER/', True, 4000,
+          1024)
     # train('open_domain', features, heuristics, 10, 0.95, 'open_domain_train.log', False, 100, 100, 'open_domain_ckpt')

@@ -148,12 +148,12 @@ class ConcatChainEncoder(nn.Module):
         v_features, e_features = input
         v_encs = []
         for i in range(len(v_features)):
-            v_enc = torch.concat(v_features[i], axis=1)
+            v_enc = torch.cat(v_features[i], axis=1)
             v_enc = self.v_fea_enc(v_enc).clone()
             v_encs.append(v_enc)
         e_encs = []
         for i in range(len(e_features)):
-            e_enc = torch.concat(e_features[i], axis=1)
+            e_enc = torch.cat(e_features[i], axis=1)
             e_enc = self.e_fea_enc(e_enc).clone()
             e_encs.append(e_enc)
 
@@ -213,11 +213,11 @@ class AlternateChainEncoder(nn.Module):
         v_features, e_features = input
         v_encs = []
         for i in range(len(v_features)):
-            v_enc = torch.concat(v_features[i], axis=1)
+            v_enc = torch.cat(v_features[i], axis=1)
             v_encs.append(v_enc)
         e_encs = []
         for i in range(len(e_features)):
-            e_enc = torch.concat(e_features[i], axis=1)
+            e_enc = torch.cat(e_features[i], axis=1)
             e_encs.append(e_enc)
 
         ## (a2) concatenating vertex i with edge i-1
@@ -225,7 +225,7 @@ class AlternateChainEncoder(nn.Module):
         e_encs = [dummy_edge_enc] + e_encs  # adding dummy edge at the start
         concat_encs = []
         for v_enc, e_enc in zip(v_encs, e_encs):
-            concatenated_enc = torch.concat([e_enc, v_enc], axis=1)
+            concatenated_enc = torch.cat([e_enc, v_enc], axis=1)
             concat_encs.append(concatenated_enc)
 
         ## (b) the encoding of the path
