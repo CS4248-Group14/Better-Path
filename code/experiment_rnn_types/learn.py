@@ -94,7 +94,6 @@ if __name__ == '__main__':
     heuristics = ['pairwise']
     # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     # heuristics = ['st', 'pairwise', 'rf', 'length']
-    train('science', features, heuristics, EncoderType.CONCAT,
-          'TransformerEncoder', 10, True, 0.8, './TRANSFORMER/', True, 4000,
-          1024)
+    train('science', features, heuristics, EncoderType.CONCAT, 'RNN', 10, True,
+          0.8, './RNN/', False, 4000, 1024)
     # train('open_domain', features, heuristics, 10, 0.95, 'open_domain_train.log', False, 100, 100, 'open_domain_ckpt')

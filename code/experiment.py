@@ -114,7 +114,7 @@ def experiment_rnn_types():
     ]
     heuristics = ['pairwise']
     input_args = []
-    for rnn_type in ['TransformerEncoder']:
+    for rnn_type in ['LSTM', 'RNN', 'TransformerEncoder']:
         # From multilayer ablation study, we know that multilayer is helpful to the performance
         input_args.append([
             'science', features, heuristics, EncoderType.CONCAT, rnn_type, 10,
