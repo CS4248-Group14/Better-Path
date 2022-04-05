@@ -1,3 +1,11 @@
+# `model.py` is adapted from `code/science/model.py`.
+# Main changes:
+# 1. [DONE by Jiayu] Modify to avoid `RuntimeError` caused by inplace update (under CPU environment).
+# 2. [DONE by Brendan] Two modified encoding methods (with dimension unification).
+# 3. [DONE by Jiayu] More layers for predictor.
+# 4. [DONE by Tian Fang] Modify Predictor to allow turning multilayer on and off.
+# 5. [DONE by Tian Fang] Create Encoder using Transformer's Encoder with a linear layer on top.
+
 import torch
 from torch import nn
 

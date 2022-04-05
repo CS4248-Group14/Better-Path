@@ -1,8 +1,10 @@
+# 1. [DONE by Tian Fang] Integrate everyone's work (and make necessary changes in corresponding files).
+# 2. [DONE by Tian Fang] Create multiple functions to perform ablation study on features, heuristics, encoder, and multilayer
+# 3. [DONE by Tian Fang] Speed up ablation study via `multiprocessing`
+
 from multiprocessing import Pool
 from learn import VertexEdgeEncoderType, train
-
-RESAMPLE_SIZE = 1024
-MAX_ITER = 4000
+from constants import MAX_ITER, RESAMPLE_SIZE
 
 
 # Results: adding the l1 distance between end vectors of edges yields the best results

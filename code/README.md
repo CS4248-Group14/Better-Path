@@ -28,9 +28,7 @@ Main changes:
 Main changes:
 1. [DONE by Jiayu] Modify to avoid `RuntimeError` caused by inplace update (under CPU environment).
 2. [DONE by Brendan] Two modified encoding methods (with dimension unification).
-3. [DONE by Jiayu] More layers for predictor. 
-   (Also commented a multi-layer model for `FeatureTransformer`, but not directly used because by experiments it 
-   doesn't show great advantage. See [Experiment Results](../analysis/experiment_data.xlsx).)
+3. [DONE by Jiayu] More layers for predictor.
 4. [DONE by Tian Fang] Modify Predictor to allow turning multilayer on and off.
 5. [DONE by Tian Fang] Create Encoder using Transformer's Encoder with a linear layer on top.
 
@@ -38,4 +36,3 @@ Main changes:
 Main changes:
 1. [DONE by Jiayu] Concat path heuristics in training.
 2. [DONE by Tian Fang] Added Enum class VertexEdgeEncoderType and add various input parameters to the `train()` method to facilitate ablation study
-

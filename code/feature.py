@@ -1,3 +1,6 @@
+# 1. [DONE by Wang Qian] Create L2 feature extractor
+# 2. [DONE by Tian Fang] Create L1 feature extractor
+
 import torch, pickle
 
 

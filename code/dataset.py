@@ -1,3 +1,8 @@
+# `dataset.py` is adapted from `code/science/dataset.py`.
+# Main changes:
+# 1. [DONE by Tian Fang] Extract methods related to loading pre-generated files, and fix Zhou's mistake of not closing file descriptor.
+# 2. [DONE by Wang Qian] New features for edges: vertex norm
+
 import pickle, random
 import numpy as np
 from itertools import cycle

@@ -1,3 +1,9 @@
+
+# `learn.py` is adapted from `code/science/learn.py`.
+# Main changes:
+# 1. [DONE by Jiayu] Concat path heuristics in training.
+# 2. [DONE by Tian Fang] Added Enum class VertexEdgeEncoderType and add various input parameters to the `train()` method to facilitate ablation study
+
 import pathlib
 import torch
 from torch import nn, optim
