@@ -1,15 +1,15 @@
 import pathlib
 import torch
 from torch import nn, optim
-from model import ChainEncoder, Predictor, AlternateChainEncoder, ConcatChainEncoder
+from model import ChainEncoder, Predictor, CombinedConcatChainEncoder, ConcatChainEncoder
 from dataset import Dataset
 from multiprocessing import Pool
 from enum import Enum
 
 
-class EncoderType(Enum):
+class VertexEdgeEncoderType(Enum):
     BASIC = 0
-    ALTERNATE = 1
+    COMBINED = 1
     CONCAT = 2
 
 
@@ -25,12 +25,12 @@ def train(dataset, features, heuristics, encoder_type, rnn_type, path_code_len,
                 '../prepare_data/features', '../prepare_data/heuristics',
                 f'../data/{dataset}')
     print('defining architecture')
-    if encoder_type == EncoderType.BASIC:
+    if encoder_type == VertexEdgeEncoderType.BASIC:
         enc = ChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(), path_code_len,
                            rnn_type, 'last')
-    elif encoder_type == EncoderType.ALTERNATE:
-        enc = AlternateChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(),
-                                    path_code_len, rnn_type, 'last')
+    elif encoder_type == VertexEdgeEncoderType.COMBINED:
+        enc = CombinedConcatChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(),
+                                         path_code_len, rnn_type, 'last')
     else:
         enc = ConcatChainEncoder(d.get_v_fea_len(), d.get_e_fea_len(),
                                  path_code_len, rnn_type, 'last')
@@ -94,6 +94,6 @@ if __name__ == '__main__':
     heuristics = ['pairwise']
     # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     # heuristics = ['st', 'pairwise', 'rf', 'length']
-    train('science', features, heuristics, EncoderType.CONCAT, 'LSTM', 10,
-          True, 0.8, './LSTM/', False, 4000, 1024)
+    train('science', features, heuristics, VertexEdgeEncoderType.CONCAT,
+          'LSTM', 10, True, 0.8, './LSTM/', False, 4000, 1024)
     # train('open_domain', features, heuristics, 10, 0.95, 'open_domain_train.log', False, 100, 100, 'open_domain_ckpt')

@@ -179,7 +179,7 @@ class ConcatChainEncoder(nn.Module):
             return self.top_linear(output)
 
 
-class AlternateChainEncoder(nn.Module):
+class CombinedConcatChainEncoder(nn.Module):
     '''
     without assumption that a vertex chain is of same length as an edge chain
     instead, each chain consists of one vertex and one edge
