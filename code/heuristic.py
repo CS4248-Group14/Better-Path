@@ -1,3 +1,5 @@
+# [DONE by Jiayu] Create multiple heuristic extractors and prepares cached heuristics.
+
 import pickle
 import numpy as np
 
