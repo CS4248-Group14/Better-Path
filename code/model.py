@@ -89,7 +89,7 @@ class ChainEncoder(nn.Module):
         combined_encs[::2] = v_encs
         combined_encs[1::2] = e_encs
         combined_encs = torch.stack(combined_encs, dim=0)
-        # combined_encs has shape (#V+#E) x batch_size x out_length
+        # combined_encs has shape (#V+#E) x resample_size x out_length
         if self.rnn_type == 'RNN':
             output, hidden = self.rnn(combined_encs)
         elif self.rnn_type == 'LSTM':
@@ -132,9 +132,9 @@ class ConcatChainEncoder(nn.Module):
                 d_model=feature_enc_length, nhead=5)
             self.transformer_encoder = nn.TransformerEncoder(encoder_layer,
                                                              num_layers=6)
-            # Output from the transformer encoder is seq_length x batch_size x feature_enc_length
+            # Output from the transformer encoder is seq_length x resample_size x feature_enc_length
             # we need to swap first two axes and flatten the sequence length dimension
-            # The dimension of the input to the linear linear layer is batch_size x [seq_length x feature_enc_length]
+            # The dimension of the input to the linear linear layer is resample_size x [seq_length x feature_enc_length]
 
     def forward(self, input):
         '''
@@ -163,7 +163,7 @@ class ConcatChainEncoder(nn.Module):
         combined_encs[::2] = v_encs
         combined_encs[1::2] = e_encs
         combined_encs = torch.stack(combined_encs, dim=0)
-        # combined_encs has shape (#V+#E) x batch_size x out_length
+        # combined_encs has shape (#V+#E) x resample_size x out_length
         if self.rnn_type == 'RNN':
             output, hidden = self.rnn(combined_encs)
         elif self.rnn_type == 'LSTM':
@@ -172,7 +172,7 @@ class ConcatChainEncoder(nn.Module):
             output = self.transformer_encoder(combined_encs)
         if self.pooling == 'last' and self.rnn_type != 'TransformerEncoder':
             return output[-1]
-        # output size will be batch_size x out_length
+        # output size will be resample_size x out_length
         else:
             output = output.permute(1, 0, 2)
             output = output.flatten(start_dim=1)
@@ -230,7 +230,7 @@ class AlternateChainEncoder(nn.Module):
 
         ## (b) the encoding of the path
         combined_encs = torch.stack(concat_encs, dim=0)
-        # combined_encs has shape (#V) x batch_size x feature_enc_length
+        # combined_encs has shape (#V) x resample_size x feature_enc_length
         if self.rnn_type == 'RNN':
             output, hidden = self.rnn(combined_encs)
         elif self.rnn_type == 'LSTM':

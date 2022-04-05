@@ -1,7 +1,7 @@
 from multiprocessing import Pool
 from learn import EncoderType, train
 
-BATCH_SIZE = 1024
+RESAMPLE_SIZE = 1024
 MAX_ITER = 4000
 
 
@@ -18,18 +18,18 @@ def ablation_features():
     input_args = [[
         'science', basic_features + new_features, [], EncoderType.BASIC,
         'LSTM', 10, False, 0.8, f'{folder}all_features/', False, MAX_ITER,
-        BATCH_SIZE
+        RESAMPLE_SIZE
     ],
                   [
                       'science', basic_features, [], EncoderType.BASIC, 'LSTM',
                       10, False, 0.8, f'{folder}no_new_features/', False,
-                      MAX_ITER, BATCH_SIZE
+                      MAX_ITER, RESAMPLE_SIZE
                   ]]
     for i in range(len(new_features)):
         input_args.append([
             'science', basic_features + [new_features[i]], [],
             EncoderType.BASIC, 'LSTM', 10, False, 0.8,
-            f'{folder}add_{i}th_feature/', False, MAX_ITER, BATCH_SIZE
+            f'{folder}add_{i}th_feature/', False, MAX_ITER, RESAMPLE_SIZE
         ])
     p = Pool(len(input_args))
     p.starmap(train, input_args)
@@ -47,18 +47,18 @@ def ablation_heuristics():
     new_heuristics = ['st', 'pairwise', 'rf', 'length']
     input_args = [[
         'science', features, new_heuristics, EncoderType.BASIC, 'LSTM', 10,
-        False, 0.8, f'{folder}all_heuristics/', False, MAX_ITER, BATCH_SIZE
+        False, 0.8, f'{folder}all_heuristics/', False, MAX_ITER, RESAMPLE_SIZE
     ],
                   [
                       'science', features, [], EncoderType.BASIC, 'LSTM', 10,
                       False, 0.8, f'{folder}no_heuristics/', False, MAX_ITER,
-                      BATCH_SIZE
+                      RESAMPLE_SIZE
                   ]]
     for i in range(len(new_heuristics)):
         input_args.append([
             'science', features, [new_heuristics[i]], EncoderType.BASIC,
             'LSTM', 10, False, 0.8, f'{folder}add_{i}th_heuristic/', False,
-            MAX_ITER, BATCH_SIZE
+            MAX_ITER, RESAMPLE_SIZE
         ])
     p = Pool(len(input_args))
     p.starmap(train, input_args)
@@ -78,7 +78,8 @@ def experiment_encoders():
     for encoder_type in EncoderType:
         input_args.append([
             'science', features, heuristics, encoder_type, 'LSTM', 10, False,
-            0.8, f'{folder}{encoder_type.name}/', False, MAX_ITER, BATCH_SIZE
+            0.8, f'{folder}{encoder_type.name}/', False, MAX_ITER,
+            RESAMPLE_SIZE
         ])
     p = Pool(len(input_args))
     p.starmap(train, input_args)
@@ -99,7 +100,7 @@ def ablation_multilayer():
         input_args.append([
             'science', features, heuristics, EncoderType.CONCAT, 'LSTM', 10,
             use_multilayer, 0.8, f'{folder}{str(use_multilayer)}/', False,
-            MAX_ITER, BATCH_SIZE
+            MAX_ITER, RESAMPLE_SIZE
         ])
     p = Pool(len(input_args))
     p.starmap(train, input_args)
@@ -119,7 +120,7 @@ def experiment_rnn_types():
         # From multilayer ablation study, we know that multilayer is helpful to the performance
         input_args.append([
             'science', features, heuristics, EncoderType.CONCAT, rnn_type, 10,
-            True, 0.8, f'{folder}{rnn_type}/', False, MAX_ITER, BATCH_SIZE
+            True, 0.8, f'{folder}{rnn_type}/', False, MAX_ITER, RESAMPLE_SIZE
         ])
     p = Pool(len(input_args))
     p.starmap(train, input_args)
@@ -146,15 +147,15 @@ def experiment_embedding_dim_and_path_code_len():
                 'science', features, heuristics, EncoderType.CONCAT, 'LSTM',
                 path_code_len, True, 0.8,
                 f'{folder}embed_dim_{embedding_dim}_path_code_len_{path_code_len}/',
-                False, MAX_ITER, BATCH_SIZE
+                False, MAX_ITER, RESAMPLE_SIZE
             ])
     p = Pool(len(input_args))
     p.starmap(train, input_args)
 
 
-# Results: batch size of 512 performs the best
-def experiment_batch_size():
-    folder = 'experiment_batch_size/'
+# Results: resample size of 512 performs the best
+def experiment_resample_size():
+    folder = 'experiment_resample_size/'
     features = [
         'v_enc_dim300', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
         'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel',
@@ -162,11 +163,11 @@ def experiment_batch_size():
     ]
     heuristics = ['pairwise']
     input_args = []
-    for batch_size in [32, 64, 256, 512, 1024]:
+    for resample_size in [32, 64, 256, 512, 1024]:
         input_args.append([
             'science', features, heuristics, EncoderType.CONCAT, 'LSTM', 5,
-            True, 0.8, f'{folder}batch_size_{str(batch_size)}/', False,
-            MAX_ITER, batch_size
+            True, 0.8, f'{folder}resample_size_{str(resample_size)}/', False,
+            MAX_ITER, resample_size
         ])
     p = Pool(len(input_args))
     p.starmap(train, input_args)
@@ -179,4 +180,4 @@ if __name__ == '__main__':
     # ablation_multilayer()
     # experiment_rnn_types()
     # experiment_embedding_dim_and_path_code_len()
-    experiment_batch_size()
+    experiment_resample_size()

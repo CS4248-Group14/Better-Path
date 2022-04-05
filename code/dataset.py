@@ -54,6 +54,7 @@ class Dataset:
                 r_short = sampled_problems[id_num]['reverse']['short']
                 self.texts[id_num + 'f'] = f_short
                 self.texts[id_num + 'r'] = r_short
+            print(f'There are {len(self.texts)} sampled paths')
 
     def load_labeled_pairs(self, src_data_path):
         print('loading labeled pairs')
@@ -68,6 +69,7 @@ class Dataset:
                     bad = first
                 g_len = (len(self.texts[good].strip().split(' ')) + 1) / 2
                 b_len = (len(self.texts[bad].strip().split(' ')) + 1) / 2
+                # We only keep paths with length 4
                 if g_len != 4 or b_len != 4:
                     continue
                 self.all_pairs.append((good, bad))
@@ -101,7 +103,9 @@ class Dataset:
         split = int(train_test_split_fraction * len(self.all_pairs))
         self.train_pairs = self.all_pairs[:split]
         self.test_pairs = self.all_pairs[split:]
-
+        print(f'There are {len(self.train_pairs)} training pairs')
+        print(f'There are {len(self.test_pairs)} test pairs')
+        # we resample from the training pairs
         self.cycled_train_pairs = cycle(self.train_pairs[:])
 
     def get_fea_len(self):

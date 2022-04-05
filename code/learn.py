@@ -14,7 +14,8 @@ class EncoderType(Enum):
 
 
 def train(dataset, features, heuristics, encoder_type, rnn_type, path_code_len,
-          use_multilayer, split_frac, out_path, use_gpu, max_iter, batch_size):
+          use_multilayer, split_frac, out_path, use_gpu, max_iter,
+          resample_size):
     ckpt_path = out_path + 'science_ckpt'
     if isinstance(out_path, str):
         path = pathlib.Path(out_path)
@@ -49,7 +50,7 @@ def train(dataset, features, heuristics, encoder_type, rnn_type, path_code_len,
     test_y = test_y.data.cpu().numpy()
     for train_iter in range(max_iter):
         chains_A, heuristic_A, chains_B, heuristic_B, y = d.get_train_pairs(
-            batch_size)
+            resample_size)
         enc.zero_grad()
         predictor.zero_grad()
         output_A = enc(chains_A)
@@ -93,6 +94,6 @@ if __name__ == '__main__':
     heuristics = ['pairwise']
     # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     # heuristics = ['st', 'pairwise', 'rf', 'length']
-    train('science', features, heuristics, EncoderType.CONCAT, 'RNN', 10, True,
-          0.8, './RNN/', False, 4000, 1024)
+    train('science', features, heuristics, EncoderType.CONCAT, 'LSTM', 10,
+          True, 0.8, './LSTM/', False, 4000, 1024)
     # train('open_domain', features, heuristics, 10, 0.95, 'open_domain_train.log', False, 100, 100, 'open_domain_ckpt')
