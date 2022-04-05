@@ -1,4 +1,3 @@
-
 # `learn.py` is adapted from `code/science/learn.py`.
 # Main changes:
 # 1. [DONE by Jiayu] Concat path heuristics in training.
@@ -93,7 +92,7 @@ def train(dataset, features, heuristics, encoder_type, rnn_type, path_code_len,
 
 if __name__ == '__main__':
     features = [
-        'v_enc_dim100', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
+        'v_enc_dim300', 'v_freq_freq', 'v_deg', 'v_sense', 'e_vertexsim',
         'e_dir', 'e_rel', 'e_weightsource', 'e_srank_rel', 'e_trank_rel',
         'e_sense', 'e_vertexl1dist'
     ]
@@ -101,5 +100,5 @@ if __name__ == '__main__':
     # features = ['v_deg', 'v_sense', 'e_weightsource', 'e_srank_rel']
     # heuristics = ['st', 'pairwise', 'rf', 'length']
     train('science', features, heuristics, VertexEdgeEncoderType.CONCAT,
-          'LSTM', 10, True, 0.8, './LSTM/', False, 4000, 1024)
+          'LSTM', 5, True, 0.8, './LSTM/', False, 4000, 1024)
     # train('open_domain', features, heuristics, 10, 0.95, 'open_domain_train.log', False, 100, 100, 'open_domain_ckpt')
